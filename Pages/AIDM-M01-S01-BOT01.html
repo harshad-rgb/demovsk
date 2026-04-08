@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign Bot - Strategic Thinking | AIDM-M01-S01-BOT01</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --flame:#FF5757;--flame-dim:#CC4545;--flame-glow:rgba(255,87,87,.12);--flame-soft:rgba(255,87,87,.06);
+  --violet:#A855F7;--violet-dim:#7C3AED;--violet-glow:rgba(168,85,247,.12);
+  --gold:#F59E0B;--gold-glow:rgba(245,158,11,.1);
+  --mint:#34D399;--mint-glow:rgba(52,211,153,.08);
+  --sky:#38BDF8;--sky-glow:rgba(56,189,248,.08);
+  --rose:#FB7185;
+  --err:#EF4444;--err-glow:rgba(239,68,68,.08);
+  --bg:#0A0A10;--surface:#12121C;--surface2:#1A1A28;--surface3:#242436;--surface4:#2E2E44;
+  --bot-bub:#14141F;--user-bub:rgba(255,87,87,.12);
+  --text:#F5F0EB;--text2:#9CA3AF;--text3:#6B7280;
+  --border:#1F1F30;--border2:#2A2A40;
+  --grad-flame:linear-gradient(135deg,#FF5757,#FF8C42);
+  --grad-violet:linear-gradient(135deg,#A855F7,#6366F1);
+  --grad-mix:linear-gradient(135deg,#FF5757 0%,#A855F7 50%,#6366F1 100%);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+::selection{background:var(--flame);color:#fff}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+
+.app{display:flex;height:100vh}
+.chat{flex:1;display:flex;flex-direction:column;min-width:0}
+
+/* Header */
+.hdr{padding:16px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-shrink:0}
+.hdr-logo{width:42px;height:42px;border-radius:12px;background:var(--grad-flame);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 20px var(--flame-glow)}
+.hdr h1{font-size:16px;font-weight:800;letter-spacing:-.3px;background:var(--grad-mix);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr span{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;display:block;margin-top:2px}
+.hdr-btns{margin-left:auto;display:flex;gap:8px}
+.btn-h{background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:7px 14px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;transition:all .2s}
+.btn-h:hover{border-color:var(--flame);color:var(--flame)}
+
+/* Progress */
+.prog{padding:8px 24px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.prog-l{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:1px;font-family:'Space Mono',monospace}
+.prog-tk{flex:1;height:3px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.prog-fl{height:100%;background:var(--grad-flame);border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.prog-n{font-size:12px;color:var(--flame);font-weight:700;font-family:'Space Mono',monospace}
+
+/* Messages */
+.msgs{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-direction:column}.row.u{align-items:flex-end}.row.b{align-items:flex-start}
+.bub{max-width:88%;padding:14px 18px;border-radius:16px;font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.bub.b{background:var(--bot-bub);color:var(--text);border:1px solid var(--border);border-top-left-radius:4px}
+.bub.u{background:var(--user-bub);color:var(--text);border:1px solid rgba(255,87,87,.15);border-top-right-radius:4px}
+.bub.hint{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-left:3px solid var(--gold)}
+.bub.success{background:var(--mint-glow);border:1px solid rgba(52,211,153,.15);border-left:3px solid var(--mint)}
+.bub.answer{background:var(--violet-glow);border:1px solid rgba(168,85,247,.15);border-left:3px solid var(--violet)}
+.bub.header{background:transparent;font-weight:800;font-size:15px;color:var(--flame);border:none;padding:16px 0 4px 0;letter-spacing:-.2px}
+.bub.incorrect{background:var(--err-glow);border:1px solid rgba(239,68,68,.12);border-left:3px solid var(--err)}
+.bub.partial{background:var(--gold-glow);border:1px solid rgba(245,158,11,.12);border-left:3px solid var(--gold)}
+.bub.summary{background:linear-gradient(135deg,var(--mint-glow),var(--violet-glow));border:1px solid rgba(52,211,153,.12);border-left:3px solid var(--mint);font-size:15px}
+.bub.adaptive{font-style:italic;font-size:13px;color:var(--text3);border:none;background:transparent;padding:6px 0}
+
+/* Data Cards */
+.data-card{max-width:95%;border-radius:16px;overflow:hidden;border:1px solid var(--border2);margin:4px 0}
+.dc-head{padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-family:'Space Mono',monospace}
+.dc-head.flame{background:linear-gradient(135deg,rgba(255,87,87,.08),rgba(255,140,66,.05));color:var(--flame);border-bottom:1px solid rgba(255,87,87,.1)}
+.dc-head.violet{background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(99,102,241,.05));color:var(--violet);border-bottom:1px solid rgba(168,85,247,.1)}
+.dc-head.gold{background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.03));color:var(--gold);border-bottom:1px solid rgba(245,158,11,.1)}
+.dc-head.sky{background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(56,189,248,.03));color:var(--sky);border-bottom:1px solid rgba(56,189,248,.1)}
+.dc-body{padding:16px 18px;background:var(--surface);font-size:13px;line-height:1.6;color:var(--text)}
+
+/* Metric grid */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin:10px 0}
+.metric{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center}
+.metric-val{font-size:18px;font-weight:800;font-family:'Space Mono',monospace;margin-bottom:2px}
+.metric-val.bad{color:var(--flame)}.metric-val.ok{color:var(--gold)}.metric-val.good{color:var(--mint)}
+.metric-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+
+/* Competitor cards */
+.comp-row{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap}
+.comp-card{flex:1;min-width:140px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;position:relative;overflow:hidden}
+.comp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.comp-card.a::before{background:var(--flame)}.comp-card.b::before{background:var(--violet)}.comp-card.c::before{background:var(--sky)}
+.comp-name{font-size:12px;font-weight:800;margin-bottom:6px;letter-spacing:-.2px}
+.comp-card.a .comp-name{color:var(--flame)}.comp-card.b .comp-name{color:var(--violet)}.comp-card.c .comp-name{color:var(--sky)}
+.comp-tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600;margin:1px;font-family:'Space Mono',monospace}
+.comp-tag.str{background:rgba(52,211,153,.1);color:var(--mint)}.comp-tag.wk{background:rgba(239,68,68,.1);color:var(--err)}
+.comp-desc{font-size:11px;color:var(--text2);margin-top:6px;line-height:1.5}
+
+/* Persona card */
+.persona{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin:8px 0}
+.persona-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.persona-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
+.persona-name{font-size:13px;font-weight:700}.persona-role{font-size:11px;color:var(--text3)}
+.persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.persona-item{font-size:11px;color:var(--text2);line-height:1.4}
+.persona-item strong{color:var(--text);font-weight:600}
+
+/* Buttons */
+.bg{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);border-radius:24px;padding:9px 20px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .25s;position:relative;overflow:hidden}
+.pill:hover{border-color:var(--flame);color:var(--flame);background:var(--flame-soft);box-shadow:0 0 20px var(--flame-glow)}
+.pill::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:var(--flame-glow);border-radius:50%;transform:translate(-50%,-50%);transition:width .3s,height .3s;z-index:0}
+.pill:active::after{width:200px;height:200px}
+
+/* Input */
+.ibar{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px;background:var(--surface);flex-shrink:0}
+.ibar textarea{flex:1;padding:12px 18px;border-radius:14px;border:1.5px solid var(--border);font-size:14px;font-family:inherit;outline:none;background:var(--surface2);color:var(--text);resize:none;min-height:44px;max-height:140px;line-height:1.5}
+.ibar textarea:focus{border-color:var(--flame);box-shadow:0 0 0 4px var(--flame-glow)}
+.ibar textarea::placeholder{color:var(--text3)}.ibar textarea:disabled{opacity:.35}
+.btn-go{background:var(--grad-flame);color:#fff;border:none;border-radius:14px;padding:12px 26px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s;align-self:flex-end;letter-spacing:.3px;box-shadow:0 4px 16px var(--flame-glow)}
+.btn-go:disabled{opacity:.25;cursor:default;box-shadow:none}
+.btn-go:not(:disabled):hover{box-shadow:0 6px 30px rgba(255,87,87,.3);transform:translateY(-1px)}
+
+/* Right Panel */
+.rpanel{width:0;overflow:hidden;border-left:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;flex-direction:column;transition:width .3s}
+.rpanel.open{width:390px}
+.rp-in{padding:18px;overflow-y:auto;flex:1}
+.rp-t{font-weight:800;font-size:15px;margin-bottom:12px;color:var(--flame)}
+.rp-s{font-size:12px;color:var(--text3);margin-bottom:16px}
+.card{padding:14px;background:var(--surface2);border-radius:12px;border:1px solid var(--border);margin-bottom:12px}
+.card-l{font-size:10px;font-weight:700;margin-bottom:6px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-family:'Space Mono',monospace}
+.card-t{font-size:12px;color:var(--text);line-height:1.5}
+.tag{display:inline-block;font-size:10px;padding:3px 8px;background:var(--surface3);border-radius:6px;border:1px solid var(--border);color:var(--text2);margin:2px;font-family:'Space Mono',monospace}
+.hdots{display:flex;gap:6px;margin-top:6px}
+.hd{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'Space Mono',monospace}
+.hd.on{background:var(--gold);color:var(--bg)}.hd.off{background:var(--surface3);color:var(--text3)}
+.sc-r{display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--border)}
+.sc-r:last-child{border-bottom:none}
+.ref-c{padding:12px;background:var(--surface2);border-radius:12px;border:1px solid var(--border);margin-bottom:10px}
+.ref-c-t{font-size:12px;font-weight:700;color:var(--flame)}
+.ref-c-m{font-size:11px;color:var(--text3);margin-top:2px}
+.ref-c-s{margin-top:6px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;white-space:pre-wrap;font-size:10px;line-height:1.4;max-height:130px;overflow-y:auto;color:var(--text2);font-family:'Space Mono',monospace}
+
+@media(max-width:768px){.rpanel.open{width:100%;position:absolute;right:0;top:0;bottom:0;z-index:10}.comp-row{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="chat">
+  <div class="hdr">
+    <div class="hdr-logo">🎯</div>
+    <div><h1>Campaign Bot - Strategy Challenges</h1><span>AIDM-M01-S01-BOT01 · 12 challenges</span></div>
+    <div class="hdr-btns">
+      <button class="btn-h" id="btnRef" onclick="tRef()">📋 Demo</button>
+      <button class="btn-h" onclick="tCtx()">Context ▸</button>
+    </div>
+  </div>
+  <div class="prog">
+    <span class="prog-l">Campaign</span>
+    <div class="prog-tk"><div class="prog-fl" id="pF"></div></div>
+    <span class="prog-n" id="pT">0/12</span>
+  </div>
+  <div class="msgs" id="M"></div>
+  <div class="ibar">
+    <textarea id="I" rows="1" placeholder="Select a challenge type..." disabled
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();go()}"
+      oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
+    <button class="btn-go" id="bS" disabled onclick="go()">Send</button>
+  </div>
+</div>
+<div class="rpanel" id="rp"><div class="rp-in" id="rc"></div></div>
+</div>
+
+<script>
+const CH=[
+// ══ A: STRATEGY DIAGNOSIS ═══════════════════════════════
+{
+  id:"A1",type:"Strategy Diagnosis",difficulty:"Easy",title:"The Mismatched Audience",icon:"🔴",
+  setup:`A luxury organic skincare brand ($80-$150 price point) launched a paid campaign. Here are the results after 30 days:`,
+  cardType:"campaign",
+  cardData:{
+    title:"Campaign Dashboard",style:"flame",
+    metrics:[
+      {v:"$12,400",l:"Ad Spend",c:""},
+      {v:"847K",l:"Impressions",c:"ok"},
+      {v:"1.8%",l:"CTR",c:"ok"},
+      {v:"0.12%",l:"Conv. Rate",c:"bad"},
+      {v:"$6,200",l:"Revenue",c:"bad"},
+      {v:"0.5x",l:"ROAS",c:"bad"}
+    ],
+    details:`Channel: TikTok (90% of budget) + Instagram Reels (10%)
+Targeting: Women 16-24, interest in "beauty hacks" and "skincare routines"
+Creative: Fast-paced videos with trending audio, "affordable luxury" messaging
+Landing page: Full product catalog, no specific product highlighted
+CTA: "Shop Now"`
+  },
+  followUp:`Good impressions and CTR, but catastrophic conversion (0.12%) and ROAS (0.5x). The campaign is LOSING money.
+
+Before suggesting any tactical fixes (better creatives, different ad copy), identify the ROOT STRATEGIC ERROR. What fundamental strategic choice is wrong here?`,
+  context:"Wrong audience diagnosis. 16-24 age group can't afford $80-150 products. The channel and creative compound the mismatch.",
+  expectedKeywords:[
+    ["audience","wrong","mismatch","target","age","16","24","young","afford"],
+    ["price","expensive","luxury","$80","$150","premium","income","budget"],
+    ["can't afford","purchasing power","disposable income","not buyer","aspiration"],
+    ["tiktok","channel","platform","younger","demographic"],
+    ["women","25","35","30","older","affluent","income bracket"]
+  ],
+  minMatches:4,
+  sampleAnswer:`THE STRATEGIC ERROR: Wrong audience.
+
+The brand is targeting 16-24 year olds with $80-150 products. This age group:
+- Has limited disposable income
+- Browses skincare content aspirationally but buys drugstore brands
+- Engages (high CTR) but doesn't convert (0.12%) because they can't afford it
+
+The high impressions and decent CTR prove the CREATIVE works - people are curious. But curiosity ≠ purchase intent when prices are 5-10x their budget.
+
+STRATEGIC FIX: Retarget to women 28-45 with income markers (interest in premium brands, luxury travel, organic food). Move budget allocation to Instagram Feed and YouTube, where this demographic spends more purchasing time.
+
+The TikTok strategy could work as a top-of-funnel awareness play, but it should NOT be 90% of budget for a conversion campaign.`,
+  hints:[
+    "The CTR is 1.8% - that's actually decent. People ARE clicking. So the creative isn't the problem. Where do they drop off? At the point of purchase. Why would someone click but not buy?",
+    "Look at the price point ($80-$150) and the audience age (16-24). What's the average disposable income of a 19-year-old? Can they afford this product?",
+    "Think of it this way: If you showed Ferrari ads to college students, you'd get great engagement (everyone likes looking at Ferraris) but zero sales. Same dynamic here.",
+    `💡 Prompt Reveal:\n\n"Diagnose a failing campaign by separating ENGAGEMENT metrics (impressions, CTR) from CONVERSION metrics (conv rate, ROAS). When engagement is high but conversion is low, the issue is usually audience-product mismatch: you're reaching people who are interested but unable or unwilling to buy. Check: does the target audience match the product's price point, buying behavior, and purchase channel?"\n\nThe engagement/conversion split is the first diagnostic tool in campaign analysis.`
+  ],
+  successMsg:"Spot on! Engagement without conversion is the signature of an audience mismatch. The 16-24 TikTok audience delivers vanity metrics but not revenue for premium products. Strategy before tactics - always.",
+  partialMsg:"You're in the right area. Be more specific: what exactly about the AUDIENCE is wrong? Look at the age range vs the price point. Would you buy an $80 serum at age 19?"
+},
+{
+  id:"A2",type:"Strategy Diagnosis",difficulty:"Medium-Easy",title:"The Channel Mismatch",icon:"🔴",
+  setup:`A B2B SaaS company selling enterprise project management software ($2,000/month plans) ran this campaign:`,
+  cardType:"campaign",
+  cardData:{
+    title:"Campaign Dashboard",style:"flame",
+    metrics:[
+      {v:"$28,000",l:"Monthly Spend",c:""},
+      {v:"2.1M",l:"Impressions",c:"ok"},
+      {v:"0.4%",l:"CTR",c:"bad"},
+      {v:"12",l:"Demo Requests",c:"bad"},
+      {v:"1",l:"Closed Deal",c:"bad"},
+      {v:"0.86x",l:"ROAS",c:"bad"}
+    ],
+    details:`Channel split: Instagram Influencers (60%), TikTok Ads (25%), LinkedIn (15%)
+Influencer strategy: 8 lifestyle/productivity influencers (50K-200K followers)
+Creative: "Day in my life using [Product]" style content
+Targeting: Business owners, entrepreneurs, "hustle culture"
+Sales cycle: Enterprise deals typically take 3-6 months`
+  },
+  followUp:`2.1M impressions but only 12 demo requests from $28K spend. That's $2,333 per demo request.
+
+The CEO says: "Our influencers aren't good enough. Let's find bigger ones."
+
+Is that the right diagnosis? If not, what's the REAL strategic error?`,
+  context:"Wrong channel for B2B enterprise. Instagram/TikTok influencers don't reach enterprise decision-makers. LinkedIn at 15% is underfunded.",
+  expectedKeywords:[
+    ["channel","wrong","mismatch","platform","instagram","tiktok","b2b","enterprise"],
+    ["linkedin","where","decision makers","professional","b2b channel"],
+    ["influencer","consumer","b2c","not enterprise","wrong format"],
+    ["decision maker","cto","cio","buyer","procurement","enterprise buyer"],
+    ["sales cycle","long","3-6 months","not impulse","complex sale","demo"],
+    ["content","thought leadership","whitepaper","case study","webinar"]
+  ],
+  minMatches:4,
+  sampleAnswer:`THE REAL ERROR: Wrong channel, not wrong influencers.
+
+The CEO is wrong. Bigger Instagram influencers won't fix this because:
+
+1. CHANNEL MISMATCH: Enterprise software buyers (CTOs, VP Engineering, IT Directors) don't discover $2K/month tools via Instagram influencers. They use LinkedIn, industry publications, peer recommendations, and analyst reports.
+
+2. CONTENT FORMAT MISMATCH: "Day in my life" content works for B2C products. Enterprise buyers need: case studies, ROI calculators, technical documentation, comparison guides, and analyst validation.
+
+3. SALES CYCLE IGNORANCE: Enterprise deals take 3-6 months with multiple stakeholders. Influencer content drives impulse engagement, not 6-month procurement processes.
+
+4. BUDGET MISALLOCATION: LinkedIn (the one channel where buyers actually are) gets only 15% of budget.
+
+STRATEGIC FIX:
+- Flip to 70% LinkedIn (Sponsored Content, InMail, thought leadership)
+- 20% Google Search (high-intent keywords: "enterprise project management software")
+- 10% retargeting (nurture the demo requests already in pipeline)
+- Replace influencers with customer case studies and webinars`,
+  hints:[
+    "The CEO wants bigger influencers. But is the CHANNEL right for the PRODUCT? Where do CTOs and IT Directors discover $2,000/month enterprise software? Is it on Instagram?",
+    "B2B enterprise buyers and B2C consumers use completely different discovery channels. Map the buyer's journey: how does a CTO at a 500-person company decide to buy project management software?",
+    "Notice: LinkedIn gets only 15% of budget but is the only channel where enterprise decision-makers actively consume professional content. What should that ratio look like?",
+    `💡 Prompt Reveal:\n\n"When a B2B campaign fails on consumer platforms, the error is usually channel-product mismatch, not creative quality. Diagnostic: (1) Where does the actual buyer persona consume content? (2) Does the content format match the buying process (impulse vs considered purchase)? (3) Is budget allocated proportionally to where buyers are?"\n\nThe channel must match the buyer's journey, not the marketer's familiarity.`
+  ],
+  successMsg:"Exactly! The CEO's instinct to 'get bigger influencers' is a classic tactical fix for a strategic problem. No amount of Instagram scale will reach enterprise CTOs. Channel-market fit is as important as product-market fit.",
+  partialMsg:"You've identified the channel issue. Go deeper: WHY are Instagram/TikTok wrong specifically for enterprise B2B? What does the enterprise buying process look like, and which channels serve it?"
+},
+{
+  id:"A3",type:"Strategy Diagnosis",difficulty:"Medium",title:"The Leaky Funnel",icon:"🔴",
+  setup:`An e-commerce D2C brand selling premium ergonomic office chairs ($450-$800) has strong traffic but can't convert:`,
+  cardType:"campaign",
+  cardData:{
+    title:"Funnel Analytics",style:"flame",
+    metrics:[
+      {v:"186K",l:"Monthly Visitors",c:"good"},
+      {v:"72%",l:"Bounce Rate",c:"bad"},
+      {v:"0.3%",l:"Conv. Rate",c:"bad"},
+      {v:"$12",l:"CAC (target: $45)",c:"good"},
+      {v:"1.2%",l:"Cart Abandon",c:""},
+      {v:"$82K",l:"Monthly Revenue",c:"ok"}
+    ],
+    details:`Traffic sources: Google Ads (40%), SEO (35%), Facebook (25%)
+Ad messaging: "Premium ergonomic chairs - Work in Comfort"
+Landing page: Homepage (all 47 products displayed in a grid)
+Product pages: Stock photos, 3 bullet features, no reviews
+Pricing: Shown only after clicking into product page
+Return policy: 30-day, but buried in footer FAQ
+Competitors: Offering free trials, 60-day returns, video demos`
+  },
+  followUp:`186K visitors/month at $12 CAC is GREAT acquisition. But 72% bounce rate and 0.3% conversion rate means the traffic is wasted.
+
+Note: Cart abandonment is only 1.2% - meaning almost nobody even GETS to the cart.
+
+The problem isn't traffic. The problem isn't even cart abandonment. Where is the funnel actually breaking, and what STRATEGIC error causes it?`,
+  context:"Weak value proposition and landing page strategy. Traffic goes to homepage (47 products), no clear value prop, no social proof, pricing hidden, trust signals buried. The strategic error is sending paid traffic to a generic homepage instead of purpose-built landing pages with clear value props.",
+  expectedKeywords:[
+    ["landing page","homepage","generic","not specific","all products","47","overwhelming"],
+    ["value proposition","value prop","why","differentiation","reason to buy","unclear"],
+    ["trust","reviews","social proof","testimonials","no reviews","credibility"],
+    ["bounce","72%","leave immediately","first impression","above fold"],
+    ["price","hidden","transparent","sticker shock","pricing","show"],
+    ["comparison","competitors","trial","60-day","returns","risk","friction"]
+  ],
+  minMatches:4,
+  sampleAnswer:`STRATEGIC ERROR: No value proposition + wrong landing page strategy.
+
+THE FUNNEL BREAKS AT THE FIRST PAGE VIEW (72% bounce):
+
+1. GENERIC HOMEPAGE AS LANDING PAGE: Sending paid traffic to a 47-product grid is the #1 conversion killer. Visitors from an ad about "ergonomic comfort" land on a cluttered catalog. No continuity between ad promise and landing experience.
+
+2. MISSING VALUE PROPOSITION: "Premium ergonomic chairs - Work in Comfort" says nothing competitors don't. Why THIS chair at $450-$800? No clear answer above the fold: no health benefits, no comparison, no "why us."
+
+3. ZERO TRUST SIGNALS: No reviews, stock photos (not real product), pricing hidden. For a $450-800 purchase, buyers need: customer reviews, real usage photos/video, visible return policy, competitor comparison. This page offers none.
+
+4. COMPETITIVE DISADVANTAGE: Competitors offer free trials and 60-day returns, which dramatically reduces purchase risk. This brand buries a weaker 30-day policy in the footer.
+
+STRATEGIC FIX:
+- Create dedicated landing pages per traffic source (Google: comparison-focused, Facebook: story-driven)
+- Lead with the value proposition above the fold: specific health/productivity claims with data
+- Add video demos, customer reviews, real workspace photos
+- Make pricing and return policy visible immediately
+- Consider a "try before you buy" program to match competitors`,
+  hints:[
+    "The bounce rate is 72% and cart abandonment is only 1.2%. This means the problem is NOT at checkout - almost nobody gets there. Where are visitors dropping off? What do they see first?",
+    "Imagine clicking an ad for 'ergonomic comfort' and landing on a page with 47 products in a grid. No guidance, no story, no 'why.' What would you do? Probably bounce.",
+    "For a $450-800 product, what would YOU need to see before buying? Reviews? Video? Return policy? Price transparency? Compare what you'd need vs what this page offers.",
+    `💡 Prompt Reveal:\n\n"Diagnose a high-traffic, low-conversion funnel by finding WHERE the drop-off occurs: (1) High bounce = page/proposition problem, (2) High exit from product pages = trust/info problem, (3) High cart abandon = pricing/friction problem. Then ask: does the landing page deliver on the ad's promise? Is the value proposition clear in 5 seconds? Are trust signals visible?"\n\nThe funnel location of the drop-off tells you what's broken.`
+  ],
+  successMsg:"Perfect diagnosis! The #1 e-commerce conversion mistake: sending paid traffic to a generic homepage. The fix is strategic (dedicated landing pages, clear value prop, trust architecture) not tactical (better ad copy won't fix a broken landing page).",
+  partialMsg:"You've identified parts of the issue. The key insight: 72% bounce + 1.2% cart abandon means the problem is at FIRST IMPRESSION, not at checkout. What do visitors see first, and why does it fail to hold them?"
+},
+{
+  id:"A4",type:"Strategy Diagnosis",difficulty:"Hard",title:"The Vanity Metrics Trap",icon:"🔴",
+  setup:`A meal-kit subscription startup reports "record Q3 results" to investors:`,
+  cardType:"campaign",
+  cardData:{
+    title:"Q3 Performance Report",style:"flame",
+    metrics:[
+      {v:"340%",l:"YoY Subscriber Growth",c:"good"},
+      {v:"$890K",l:"Q3 Revenue",c:"good"},
+      {v:"$42",l:"CAC",c:"ok"},
+      {v:"$58",l:"Avg Order Value",c:"ok"},
+      {v:"18%",l:"Month-1 Retention",c:"bad"},
+      {v:"-$210K",l:"Q3 Net Margin",c:"bad"}
+    ],
+    details:`Channel: 80% paid social (Facebook/Instagram discount campaigns)
+Offer: "First box 75% off - just $14.50!" (regular price: $58/week)
+Creative: Heavy emphasis on discount, lifestyle imagery
+Targeting: Broad (25-55, urban, "interested in cooking")
+Retention strategy: Email sequence (3 emails post-first-box)
+Competitor benchmark: Industry avg retention month-1 is 40-50%
+
+Hidden data (not in the investor deck):
+- 68% of new subscribers cancel after the first discounted box
+- Average subscriber lifetime: 1.4 months
+- LTV: $81 | CAC: $42 → LTV:CAC ratio: 1.93x
+- Customer support tickets tripled (billing complaints about price jump)
+- NPS score dropped from 42 to 19 this quarter`
+  },
+  followUp:`The investor deck shows 340% growth and $890K revenue. Looks incredible.
+
+But look at the hidden data. This campaign has MULTIPLE intersecting strategic errors, not just one.
+
+Identify at least 3 distinct strategic errors and explain how they compound each other.`,
+  context:"Multiple compounding errors: discount-dependent acquisition destroys unit economics, broad targeting attracts deal-seekers not cooking enthusiasts, no retention strategy, and misleading reporting to investors.",
+  expectedKeywords:[
+    ["discount","75%","off","unsustainable","price","anchor","expectation","first box","loss leader"],
+    ["retention","18%","cancel","churn","month-1","leave","don't stay","68%"],
+    ["ltv","cac","ratio","1.93","unit economics","lifetime value","unprofitable","losing money"],
+    ["broad","targeting","deal seekers","bargain","not loyal","wrong customer","quality"],
+    ["vanity","misleading","growth","revenue","hides","mask","real","underneath"],
+    ["nps","19","satisfaction","complaints","billing","price jump","sticker shock"]
+  ],
+  minMatches:5,
+  sampleAnswer:`THREE COMPOUNDING STRATEGIC ERRORS:
+
+1. DISCOUNT-DEPENDENT ACQUISITION (Root Cause):
+75% off first box attracts deal-seekers, not cooking enthusiasts. The offer creates a price anchor of $14.50 - when the real price ($58/week) kicks in, customers experience sticker shock. 68% cancel immediately. The discount isn't acquiring customers - it's renting them for one transaction.
+
+2. WRONG AUDIENCE THROUGH BROAD TARGETING:
+"25-55, urban, interested in cooking" is so broad it's meaningless. Combined with heavy discount messaging, the campaign self-selects for bargain hunters, not people who value meal-kit convenience. These are the LEAST likely to retain at full price.
+
+3. NO RETENTION ARCHITECTURE:
+3 post-purchase emails is not a retention strategy for a product with 82% month-1 churn. There's no onboarding, no value demonstration, no gradual price transition, no loyalty program, no community. The funnel ends at acquisition.
+
+HOW THEY COMPOUND:
+- Deep discount → attracts price-sensitive customers → who churn at full price → requiring MORE discounted acquisition → burning more cash → worse unit economics each quarter
+- This is a growth death spiral: the faster you grow, the faster you lose money
+- LTV:CAC of 1.93x seems okay until you realize industry standard is 3x+ for subscription businesses
+- NPS collapse (42→19) means even retained customers are unhappy
+
+THE VANITY TRAP: 340% growth and $890K revenue look great in a deck but mask $210K losses, 82% churn, and deteriorating brand health. This company is buying revenue, not building a business.`,
+  hints:[
+    "When growth looks incredible but net margin is negative, the first question is: is the growth REAL or is it being purchased with unsustainable discounts?",
+    "What kind of customer does a '75% off' ad attract? Are they the same kind of customer who will pay $58/week ongoing? The offer determines the audience quality.",
+    "Look at the compounding effect: discount → wrong customers → high churn → need more acquisition → more discounts → worse unit economics. It's a spiral. And the NPS drop from 42 to 19 suggests even the staying customers are unhappy.",
+    `💡 Prompt Reveal:\n\n"When a campaign shows strong top-line metrics but weak economics, apply the 'Sustainable Growth Test': (1) Remove the promotional discount - would the same customers buy at full price? (2) LTV:CAC ratio → is it above 3x? (3) Retention curve → does it stabilize or continuously decline? (4) NPS trend → is brand health improving or degrading? Growth that fails these tests is 'rented growth' - it disappears when spending stops."\n\nThe hardest strategic skill is recognizing impressive-looking numbers as warning signs.`
+  ],
+  successMsg:"Exceptional analysis. You identified the death spiral: discount acquisition → wrong customers → churn → more acquisition needed. The investor deck is a masterclass in vanity metrics. Being able to see THROUGH impressive top-line numbers to the underlying unit economics is what separates strategic thinkers from tactical operators.",
+  partialMsg:"You've identified the discount problem. But go deeper: how do the discount strategy, broad targeting, and lack of retention COMPOUND each other into a growth death spiral? And what does the NPS collapse (42→19) tell you about the brand's future?"
+},
+
+// ══ B: AUDIENCE BUILDING ════════════════════════════════
+{
+  id:"B1",type:"Audience Building",difficulty:"Easy",title:"Meditation App Persona",icon:"🟡",
+  setup:`Product: "Stillness" - a premium meditation app ($12.99/month).
+
+Features: AI-personalized sessions, sleep stories, breathing exercises, corporate wellness packages, science-backed programs, 7-day free trial.
+
+Build a PRIMARY audience persona. Include:
+- Demographics (age range, income, location type, life stage)
+- Psychographics (values, fears, motivations, daily frustrations)
+- Digital behavior (platforms, content consumption, purchase triggers)
+- The ONE sentence this person would use to describe their problem
+
+⚠️ Important: Only include what you can JUSTIFY with reasoning. Don't hallucinate - if you're making an assumption, flag it as one.`,
+  context:"Tests audience persona construction with emphasis on avoiding unfounded assumptions. Learner should connect product features to audience needs logically.",
+  expectedKeywords:[
+    ["25","35","40","age","professional","working","millennial","adult"],
+    ["stress","anxiety","busy","overwhelm","sleep","mental health","burnout"],
+    ["income","mid","high","afford","premium","$12.99","disposable"],
+    ["urban","city","suburban","connected","digital"],
+    ["instagram","youtube","podcast","app","digital","linkedin"],
+    ["value","wellness","self-care","health","mindful","balance"],
+    ["justify","because","reason","data","assumption","flag","assume"]
+  ],
+  minMatches:5,
+  sampleAnswer:`PRIMARY PERSONA: "The Overwhelmed Optimizer"
+
+DEMOGRAPHICS:
+- Age: 28-42 (old enough to have career stress, young enough to be digitally native and app-comfortable)
+- Income: $60K-$120K (can afford $12.99/month without thinking twice; below this, free alternatives win)
+- Location: Urban/suburban (higher stress levels, longer commutes, more screen time)
+- Life stage: Mid-career professional, possibly with young children (ASSUMPTION: parenting adds stress - flagging this as assumed, not data-backed)
+
+PSYCHOGRAPHICS:
+- Values: Self-improvement, productivity, science over spirituality
+- Fears: Burnout, cognitive decline, being seen as "not handling it"
+- Motivation: Wants to perform BETTER, not just feel better (the "optimize" framing)
+- Daily frustration: "I know I should meditate but I don't have 30 minutes and I don't know where to start"
+
+DIGITAL BEHAVIOR:
+- Platforms: Instagram (wellness content), YouTube (productivity channels), LinkedIn (career identity)
+- Content: Follows Tim Ferriss / Huberman Lab types - science-backed self-improvement
+- Purchase triggers: Free trial (lowers risk), social proof (ratings/reviews), "science-backed" claims
+- Discovery: Likely via podcast ad or Instagram targeted ad, NOT organic search (ASSUMPTION)
+
+THEIR PROBLEM IN ONE SENTENCE:
+"I'm stressed and exhausted but I don't have time for another thing in my schedule - I need something that works in 5-10 minutes and actually has evidence behind it."`,
+  hints:[
+    "Start with the product: $12.99/month, AI-personalized, science-backed. What kind of person is willing to pay for this when free meditation apps exist? That willingness-to-pay tells you about their income AND mindset.",
+    "Psychographics matter more than demographics for app purchases. What EMOTIONAL state drives someone to download a meditation app? It's not curiosity - it's a pain point. What's hurting?",
+    "Flag your assumptions! If you say 'they're parents' - do you know that, or are you guessing? Honest persona building means separating evidence-based traits from assumptions.",
+    `💡 Prompt Reveal:\n\n"Build an audience persona by working BACKWARD from the product: (1) Price point → income bracket, (2) Key features → pain points they solve, (3) Channel/format → digital behavior, (4) Competitors → why would someone choose THIS over free alternatives? For each trait, note whether it's evidence-based or an assumption."\n\nThe product IS the evidence. Every feature implies a user need.`
+  ],
+  successMsg:"Strong persona! You connected product features to audience traits logically (price→income, AI-personalized→wants efficiency, science-backed→skeptical of woo-woo). And you flagged your assumptions - that's intellectual honesty most marketers skip.",
+  partialMsg:"Good start. Are you JUSTIFYING each trait or just listing demographics? Connect each claim to the product: WHY that age range? WHY that income? And flag anything you're guessing about."
+},
+{
+  id:"B2",type:"Audience Building",difficulty:"Medium-Easy",title:"Premium Dog Food ICP",icon:"🟡",
+  setup:`Product: "Noble Feast" - a human-grade, fresh dog food delivery service ($6-$10/day per dog, subscription).
+
+Features: Vet-formulated recipes, real meat/vegetables, personalized portions based on breed/weight/age, eco-friendly packaging, subscription with flexible pauses, breed-specific nutrition guides.
+
+Build TWO audience segments (not just one). For each:
+- Demographics + psychographics
+- Buying motivation (the emotional AND rational driver)
+- The objection they'd raise before buying
+- How to overcome that objection
+
+⚠️ These two segments should represent genuinely DIFFERENT motivations, not just different ages.`,
+  context:"Tests ability to identify distinct segments with different motivations for the same product. Also tests objection handling - a strategic marketing skill.",
+  expectedKeywords:[
+    ["health","vet","quality","allergy","sensitive","condition","medical","premium"],
+    ["emotional","guilt","love","best","baby","fur baby","treat","family member"],
+    ["two","segment","different","distinct","motivation","reason"],
+    ["objection","expensive","cost","price","$6","$10","justify"],
+    ["convenience","delivery","time","fresh","subscription","easy"],
+    ["overcome","trial","comparison","value","long-term","vet bills","roi"]
+  ],
+  minMatches:5,
+  sampleAnswer:`SEGMENT 1: "The Health-Anxious Pet Parent"
+
+Demographics: 30-50, HHI $80K+, suburban, has a dog with a known health issue (allergies, digestive problems, weight issues)
+Psychographics: Research-driven, reads ingredient labels, has already tried multiple kibble brands. Treats vet's advice as authority.
+Buying motivation:
+- Emotional: Guilt and anxiety about their dog's health issues
+- Rational: Vet recommended fresh food, or they've read that commercial kibble contains fillers
+Primary objection: "$6-10/day is expensive. That's $180-300/month."
+Overcome with: "Compare this to vet bills for ongoing health issues. Customers report 40% fewer vet visits. It's not food cost - it's healthcare cost." + Free trial + vet endorsement testimonials.
+
+SEGMENT 2: "The Lifestyle Humanizer"
+
+Demographics: 25-38, urban, HHI $70K+, likely no kids yet, dog is their first "dependent." Active on Instagram.
+Psychographics: Dog is a lifestyle extension and identity marker. Posts dog content. Buys premium everything (coffee, skincare, dog food). Social signaling matters.
+Buying motivation:
+- Emotional: "My dog deserves what I'd eat myself." Love expressed through quality.
+- Rational: Eco-friendly packaging aligns with their sustainability values
+Primary objection: "Is it really better than the expensive kibble I already buy?"
+Overcome with: Visual comparison (real chicken vs kibble pellets). Unboxing experience that's Instagram-worthy. User-generated content from similar dog parents.
+
+KEY DIFFERENCE: Segment 1 buys from ANXIETY (solving a problem). Segment 2 buys from IDENTITY (expressing who they are). Same product, completely different marketing messages.`,
+  hints:[
+    "Two different motivations means two different EMOTIONAL drivers. One person might buy for their dog's health. Another might buy because of how it makes THEM feel. What are these two emotional territories?",
+    "Think about the objection each segment would raise. The price-sensitive rational buyer needs ROI logic. The identity-driven buyer needs social proof and aesthetic appeal. Different objections need different responses.",
+    "The best segmentation separates people by WHY they buy, not just WHO they are. Two 35-year-olds might buy the same dog food for completely different reasons.",
+    `💡 Prompt Reveal:\n\n"Build distinct audience segments by identifying different MOTIVATIONAL DRIVERS for the same product. For each: (1) What emotion triggers the purchase? (2) What rational justification do they need? (3) What's their biggest objection? (4) What message overcomes it? Two segments should need fundamentally different ad creative."\n\nIf both segments could be reached with the same ad, they're not distinct enough.`
+  ],
+  successMsg:"Excellent segmentation! The anxiety-driven vs identity-driven split is real - and it demands completely different creative, messaging, and even channel strategy. The objection handling shows you're thinking about the full persuasion arc, not just awareness.",
+  partialMsg:"You have two segments, but are they truly DIFFERENT in motivation? If you could reach both with the same ad, they're not distinct enough. One should buy from a problem/pain, the other from aspiration/identity."
+},
+{
+  id:"B3",type:"Audience Building",difficulty:"Medium",title:"B2B Cybersecurity ICP",icon:"🟡",
+  setup:`Product: "ShieldOps" - an AI-powered cybersecurity platform for mid-market companies (100-2,000 employees). $3,500/month.
+
+Features: Real-time threat detection, automated incident response, compliance reporting (SOC 2, GDPR, HIPAA), executive risk dashboard, 24/7 SOC-as-a-service, integrates with existing tools (Slack, Jira, AWS).
+
+Build an Ideal Customer Profile (ICP) covering:
+1. COMPANY profile (industry, size, tech maturity, trigger events)
+2. BUYING COMMITTEE (list each role involved, their priorities, and their objection)
+3. The ANTI-PERSONA (who should you NOT target and why)
+
+This is B2B - there's no single "buyer." Map the full committee.`,
+  context:"Tests B2B audience building: company-level ICP, multi-stakeholder buying committee, and negative personas. Much more complex than B2C persona building.",
+  expectedKeywords:[
+    ["mid-market","100","2000","company size","employee count","smb","medium"],
+    ["ciso","cto","cio","security","it director","technical","buyer"],
+    ["cfo","finance","budget","cost","justify","roi","money"],
+    ["ceo","board","risk","liability","compliance","reputation"],
+    ["trigger","breach","audit","regulation","compliance deadline","funding","growth"],
+    ["anti-persona","not target","enterprise","small","too big","too small","won't buy"],
+    ["committee","multiple","stakeholder","decision","influence","champion"]
+  ],
+  minMatches:5,
+  sampleAnswer:`1. COMPANY PROFILE:
+- Size: 200-1,500 employees (sweet spot: large enough to need enterprise security, small enough to not have an in-house SOC)
+- Industries: Healthcare, fintech, SaaS, legal (high regulatory pressure)
+- Tech maturity: Cloud-native or cloud-migrating (AWS/Azure), uses Slack/Jira (integration signals)
+- Revenue: $20M-$500M
+- Trigger events that create urgency:
+  • Just experienced a security incident or near-miss
+  • Preparing for SOC 2 / HIPAA audit
+  • Received new funding and scaling rapidly
+  • New regulation deadline approaching
+  • Their current IT person handling security is overwhelmed
+
+2. BUYING COMMITTEE:
+CISO/VP Security (Champion): Wants best-in-class threat detection. Objection: "Can your AI really replace my team's judgment?"
+CTO/VP Engineering (Influencer): Wants seamless integration, no disruption. Objection: "Will this break our existing CI/CD pipeline?"
+CFO (Approver): Wants ROI justification. Objection: "$3,500/month - how does this compare to hiring a security analyst?"
+CEO (Sponsor): Wants risk reduction and board-ready reporting. Objection: "Are we actually at risk, or is this insurance for something that won't happen?"
+
+3. ANTI-PERSONA (Do NOT target):
+- Companies <50 employees: Can't afford $3,500/month, don't need this level of sophistication
+- Enterprise >5,000 employees: Already have in-house SOC teams, want custom solutions, sales cycle is 12+ months
+- Companies with no cloud infrastructure: Product integrations won't work, they need on-prem solutions
+- "Security nihilists": Companies that don't see security as a priority until they get breached. They won't buy proactively - they're a waste of sales time.`,
+  hints:[
+    "B2B ≠ one buyer. For a $3,500/month security product, at least 3-4 people are involved in the decision. Map them: who champions it, who evaluates it technically, who approves the budget, who signs off on risk?",
+    "Trigger events are gold in B2B. What HAPPENS to a company that makes them suddenly need cybersecurity? A breach? An audit? A funding round? New regulation? These events create urgency.",
+    "The anti-persona is as valuable as the persona. Who will waste your sales team's time? Too small to afford it? Too large to need you? In an industry with no compliance pressure? Define them explicitly.",
+    `💡 Prompt Reveal:\n\n"Build a B2B ICP with: (1) Company firmographics + tech stack + trigger events, (2) Full buying committee: role, priority, objection per stakeholder, (3) Anti-persona with explicit exclusion criteria. For the buying committee, identify the Champion (who pushes for purchase), Influencer (who evaluates), Approver (who controls budget), and Blocker (who might veto)."\n\nB2B marketing fails when it targets the right company but the wrong stakeholder within that company.`
+  ],
+  successMsg:"Outstanding ICP! You mapped the full buying committee with role-specific objections - that's how enterprise marketing actually works. The anti-persona saves sales time by disqualifying bad fits early. And trigger events are the timing mechanism that turns a 'nice-to-have' into a 'need-now.'",
+  partialMsg:"Good company profile. But B2B requires the full BUYING COMMITTEE - who are the 3-4 people involved in a $3,500/month decision? Each has different priorities and different objections. And don't forget the anti-persona - who should you actively AVOID targeting?"
+},
+{
+  id:"B4",type:"Audience Building",difficulty:"Hard",title:"Fintech for Gig Workers",icon:"🟡",
+  setup:`Product: "GigWallet" - a financial app for gig economy workers (Uber, DoorDash, Etsy sellers, freelancers). Features: instant earnings access (no waiting for weekly pay), automatic tax set-asides, expense tracking by gig platform, credit building from gig income, emergency fund autosave.
+
+Build an audience profile that:
+1. Avoids stereotyping gig workers as low-income or financially irresponsible
+2. Identifies at least 3 distinct SUB-SEGMENTS within the gig economy (they are NOT all the same)
+3. For each sub-segment: unique pain point, unique feature appeal, and the trust barrier you must overcome
+
+⚠️ The gig economy spans: a college student doing DoorDash 10hrs/week, a professional freelance designer earning $150K, and a single parent driving Uber full-time. Same "gig worker" label, radically different needs.`,
+  context:"Tests nuanced audience building that avoids stereotypes and recognizes heterogeneity. The gig economy spans vastly different economic realities - treating it as one audience is a strategic error.",
+  expectedKeywords:[
+    ["sub-segment","different","distinct","not all same","varies","range","diverse"],
+    ["freelancer","professional","designer","developer","high earning","consultant"],
+    ["full-time","primary","income","depend","sole","uber","driver","delivery"],
+    ["side","hustle","part-time","supplemental","student","extra","secondary"],
+    ["trust","bank","fintech","security","data","predatory","fees","skeptic"],
+    ["stereotype","assumption","not low income","diverse","range","avoid"],
+    ["tax","1099","set aside","quarterly","owe","surprise","self-employed"]
+  ],
+  minMatches:5,
+  sampleAnswer:`THREE DISTINCT SUB-SEGMENTS:
+
+1. "The Professional Freelancer" (25-45, $60K-$200K+)
+Examples: Freelance designers, developers, consultants, writers
+Pain point: Income is high but IRREGULAR. A $15K month followed by a $2K month makes budgeting impossible. Tax obligations are complex (quarterly estimates, multiple 1099s).
+Feature appeal: Automatic tax set-asides (their #1 headache), expense tracking across multiple clients
+Trust barrier: "I already have a bank account and an accountant. Why add another app?" They need premium positioning, not financial-help positioning. They're not struggling - they're optimizing.
+Marketing angle: Sophistication, not salvation. "Your income isn't traditional - your financial tools shouldn't be either."
+
+2. "The Full-Time Gigger" (22-55, $25K-$50K)
+Examples: Full-time rideshare/delivery drivers, Etsy shop operators
+Pain point: Weekly pay cycles create cash crunches mid-week. Unexpected expenses (car repair, medical) hit hard without savings buffer. Banks don't understand gig income for loans/credit.
+Feature appeal: Instant earnings access (bridges the cash gap), credit building from gig income (they're invisible to traditional credit scoring), emergency fund autosave
+Trust barrier: "Fintech apps hit you with hidden fees. Is this another predatory product?" They've been burned by payday lenders and cash advance apps. Transparency is non-negotiable.
+Marketing angle: Respect and practicality. "Built BY gig workers who know the grind." Zero-fee guarantee upfront.
+
+3. "The Side Hustler" (18-30, $40K-$80K from primary job + $5K-$20K gig)
+Examples: College students, employed adults doing gigs for extra cash
+Pain point: Doesn't think about taxes on gig income until April when they owe $1,500 they didn't plan for. Doesn't track expenses because gig isn't their "real" job.
+Feature appeal: Tax set-aside (prevents the April surprise), simple expense tracking (set and forget)
+Trust barrier: "I only make $200/week from DoorDash, it's not worth setting up a whole financial app." The barrier is perceived ROI, not trust. They need to see value for small earners.
+Marketing angle: "Even $200/week has tax implications. We handle it in the background so you don't have to think about it."
+
+WHY THIS MATTERS STRATEGICALLY:
+One "gig worker" campaign would fail because:
+- Professional freelancers would be insulted by "financial help" messaging
+- Full-time giggers would distrust slick fintech branding
+- Side hustlers would ignore anything that seems like more work
+
+Each sub-segment needs different creative, different channels, and different positioning.`,
+  hints:[
+    "The biggest mistake: treating 'gig workers' as one group. A freelance developer earning $150K has NOTHING in common with a college student doing DoorDash. How many distinct sub-groups can you identify?",
+    "For each sub-segment, the TRUST BARRIER is different. Professional freelancers distrust unnecessary tools. Full-time giggers distrust predatory fintech. Side hustlers don't think they need anything. Different objections need different responses.",
+    "Avoid the condescending trap: not all gig workers need 'financial help.' Some need optimization tools. Some need cash flow management. Some need tax automation. Frame each sub-segment's need with respect for their sophistication level.",
+    `💡 Prompt Reveal:\n\n"Build a nuanced audience profile by: (1) Identifying 3+ sub-segments within the broad category, (2) For each: unique pain point, unique feature appeal, trust barrier, and marketing angle, (3) Explain WHY a single campaign targeting 'gig workers' would fail. The test: if two sub-segments could be reached with the same ad, they're not distinct enough."\n\nThe best audience work RESISTS simplification. 'Gig workers' is a label, not an audience.`
+  ],
+  successMsg:"This is premium audience work. You resisted the temptation to treat 'gig workers' as one group, identified genuinely different motivations AND trust barriers, and - critically - avoided the condescending 'these people need financial help' trap. Each sub-segment demands different creative, channels, and positioning. That's strategic thinking.",
+  partialMsg:"You have sub-segments, but are they truly distinct? Check: (1) Does each have a DIFFERENT primary pain point? (2) Does each have a DIFFERENT trust barrier? (3) Would the same ad creative work for all of them? If yes to #3, dig deeper."
+},
+
+// ══ C: COMPETITIVE GAP SPOTTING ═════════════════════════
+{
+  id:"C1",type:"Competitive Gap Spotting",difficulty:"Easy",title:"Coffee Shop Positioning",icon:"🟢",
+  setup:`Three coffee chains compete in a mid-sized city:`,
+  cardType:"competitors",
+  competitors:[
+    {name:"BeanRush",cls:"a",strengths:["Speed","Low price","Drive-thru","Loyalty app"],weaknesses:["Basic menu","No seating","Robusta beans"],desc:"Fast, cheap, convenient. Target: commuters who want coffee in <2 minutes. Average ticket: $4."},
+    {name:"The Roastery",cls:"b",strengths:["Single-origin beans","Skilled baristas","Aesthetic space","Artisan pastries"],weaknesses:["Slow service","High prices ($7+)","No mobile ordering"],desc:"Premium third-wave coffee shop. Target: coffee connoisseurs, remote workers. Average ticket: $9."},
+    {name:"Cuppa Joy",cls:"c",strengths:["Family-friendly","Play area","Varied menu","Birthday packages"],weaknesses:["Average coffee","Noisy","Suburban only"],desc:"Family destination. Target: parents with young children. Average ticket: $6."}
+  ],
+  followUp:`Each competitor owns a clear position:
+- BeanRush: Speed/convenience
+- The Roastery: Premium quality
+- Cuppa Joy: Family experience
+
+Identify the BIGGEST positioning gap in this market. What audience/need is NONE of them serving? Propose a differentiation angle for a new entrant.`,
+  context:"Tests gap identification in a simple competitive landscape. The obvious gaps: co-working/productivity focused, health/wellness focused, or community/events focused.",
+  expectedKeywords:[
+    ["gap","missing","none","unserved","opportunity","white space","underserved"],
+    ["work","co-working","remote","productivity","laptop","wifi","meetings","workspace"],
+    ["health","wellness","functional","matcha","adaptogen","sugar","alternative"],
+    ["community","events","local","social","gathering","hub","meetup"],
+    ["differentiate","position","unique","distinct","own","angle","niche"],
+    ["audience","who","serve","target","need","segment"]
+  ],
+  minMatches:4,
+  sampleAnswer:`BIGGEST GAP: The Productivity Hub
+
+None of these serve the growing remote/hybrid worker who needs a WORKSPACE that happens to serve great coffee:
+
+- BeanRush has no seating (can't work there)
+- The Roastery has the vibe but no mobile ordering, no power outlets mentioned, slow service interrupts deep work
+- Cuppa Joy is noisy with kids (impossible to work)
+
+PROPOSED POSITIONING: "The Third Desk"
+A coffee shop designed for productive work:
+- Fast WiFi with ethernet backup
+- Bookable meeting pods (hourly)
+- Power at every seat, monitor-friendly desks
+- Good coffee (not artisan-slow, not commodity)
+- Mobile ordering so you don't break flow
+- Quiet zones + collaboration zones
+- Day passes and monthly memberships
+
+TARGET: Remote workers, freelancers, small team meetings, studying professionals
+PRICING: $5-7 coffee + optional $15/day desk pass or $99/month membership
+
+WHY THIS WINS: It competes with WeWork ($300+/month) on price while offering what Starbucks tries to be but isn't: a legitimately great workspace.`,
+  hints:[
+    "Map what each competitor is KNOWN FOR. Now map what none of them offer. The gap is in the space between their positions.",
+    "Think about WHO walks into a coffee shop and doesn't find what they need. Commuters are served (BeanRush). Connoisseurs are served (Roastery). Families are served (Cuppa Joy). Who's left?",
+    "Consider macro trends: remote work, health/wellness, community gathering, digital nomads. Which of these trends has NO coffee shop serving it in this market?",
+    `💡 Prompt Reveal:\n\n"Map competitors on a positioning matrix: each owns a territory (speed, quality, family). The gap is the territory NO ONE owns that has sufficient demand. Test the gap with: (1) Is there a real audience for this? (2) Is the audience large enough? (3) Can you serve them in a way that's structurally hard for existing players to copy?"\n\nA good positioning gap is: unserved, sizable, and defensible.`
+  ],
+  successMsg:"Clean gap identification! The productivity hub exploits a real trend (remote work) that none of the three competitors serve. Your positioning is specific, the business model is clear, and it's structurally hard for the competitors to copy (BeanRush has no seating, Roastery is slow, Cuppa Joy is noisy).",
+  partialMsg:"You've identified a gap. Is it: (1) a REAL unmet need with sufficient demand, (2) structurally hard for existing competitors to copy, and (3) specific enough to own? Vague gaps like 'better quality' aren't positioning."
+},
+{
+  id:"C2",type:"Competitive Gap Spotting",difficulty:"Medium-Easy",title:"Project Management Wars",icon:"🟢",
+  setup:`Three project management tools compete for mid-market teams:`,
+  cardType:"competitors",
+  competitors:[
+    {name:"TaskForge",cls:"a",strengths:["Power features","Custom workflows","API ecosystem","Gantt charts"],weaknesses:["Steep learning curve","Cluttered UI","$15/user/month"],desc:"The 'Swiss Army knife' - does everything, complex to set up. Loved by engineering teams. 10,000+ integrations."},
+    {name:"FlowBoard",cls:"b",strengths:["Beautiful UI","Intuitive drag-drop","Templates","Free tier"],weaknesses:["Limited for complex projects","No time tracking","Weak reporting"],desc:"Visual-first Kanban boards. Target: creative teams, small marketing teams. Easy to start, hard to scale."},
+    {name:"PlanSync",cls:"c",strengths:["Resource planning","Budget tracking","Executive dashboards","SOC 2 compliant"],weaknesses:["Enterprise-only pricing","Long onboarding","Feels corporate","No free trial"],desc:"Enterprise portfolio management. Target: PMOs, IT departments. Average deal: $50K+/year."}
+  ],
+  followUp:`The positioning landscape:
+- TaskForge: Power/flexibility (complex)
+- FlowBoard: Simplicity/beauty (limited)
+- PlanSync: Enterprise governance (expensive)
+
+There's a classic gap here that many SaaS tools miss. What audience is underserved, and what positioning would win them?`,
+  context:"The gap between 'easy but limited' and 'powerful but complex' - the 'goldilocks' zone. Or the non-technical manager who needs more than Kanban but isn't an engineer.",
+  expectedKeywords:[
+    ["middle","between","goldilocks","gap","simple","powerful","balance","both"],
+    ["non-technical","manager","marketing","operations","business","not engineer"],
+    ["grow","scale","start simple","add complexity","expand","graduate","evolve"],
+    ["ai","automate","smart","intelligent","suggest","learn","reduce setup"],
+    ["onboarding","easy start","quick","minutes","template","guided"],
+    ["reporting","insight","visibility","status","progress","without complexity"]
+  ],
+  minMatches:4,
+  sampleAnswer:`BIGGEST GAP: "Powerful simplicity" for growing non-technical teams
+
+The gap sits between FlowBoard (easy but outgrown fast) and TaskForge (powerful but engineer-brained):
+
+UNSERVED AUDIENCE: Operations managers, marketing leads, HR teams, agency project managers - non-technical leaders managing 10-50 person teams who need:
+- More than Kanban boards (dependencies, deadlines, resource visibility)
+- Less than enterprise PMO tools (no Gantt charts, no portfolio governance)
+- Fast onboarding (not a 6-week implementation)
+- Reporting their boss can understand without a dashboard degree
+
+PROPOSED POSITIONING: "Grows with you"
+An AI-assisted PM tool that starts as simple as FlowBoard but intelligently adds complexity as your projects demand it:
+- Start: simple task boards (5-minute setup)
+- Month 1: AI suggests workflow automations based on your patterns
+- Month 3: Dependencies, timelines, and resource views unlock when the system detects you need them
+- Pricing: $8/user/month (between FlowBoard's free and TaskForge's $15)
+
+WHY THIS WINS:
+- FlowBoard users who outgrow it have nowhere to go except TaskForge (painful transition)
+- TaskForge users who hate the complexity have nowhere to go except FlowBoard (loses features)
+- This tool IS the migration path for both, positioned as the natural next step`,
+  hints:[
+    "Plot the three tools on a simplicity ↔ power axis. There's a gap in the MIDDLE that's wider than it looks. Who sits in that middle ground?",
+    "Think about the user who OUTGROWS FlowBoard. Their team gets bigger, projects get more complex. Where do they go? TaskForge is a big, painful jump. Is there something in between?",
+    "The most successful SaaS products often sit between 'too simple' and 'too complex.' They win by being 'powerful enough' with a 'simple enough' experience. What would that look like here?",
+    `💡 Prompt Reveal:\n\n"Map competitors on a 2x2 matrix (simplicity vs power). The biggest gaps are: (1) High power + high simplicity quadrant (the holy grail), (2) The specific USER TYPE that falls between existing tools' sweet spots. Find who's being forced to use a tool that's either too simple or too complex for their needs."\n\nPositioning gaps are often on a spectrum between two extremes, not in an entirely new dimension.`
+  ],
+  successMsg:"Sharp analysis. The 'grows with you' positioning is powerful because it captures churning users from BOTH competitors - FlowBoard users who outgrow it AND TaskForge users who find it overwhelming. That's a two-way acquisition funnel.",
+  partialMsg:"You've spotted the simplicity-power tension. Sharpen it: who SPECIFICALLY is the person stuck between these tools? What's their role, team size, and the moment they realize their current tool isn't working?"
+},
+{
+  id:"C3",type:"Competitive Gap Spotting",difficulty:"Medium",title:"Fitness App Arena",icon:"🟢",
+  setup:`Three fitness apps compete in the consumer market:`,
+  cardType:"competitors",
+  competitors:[
+    {name:"FitForce",cls:"a",strengths:["Huge exercise library","Custom programs","Progress tracking","Gym focus"],weaknesses:["Intimidating UI","No nutrition","Male-dominated branding","$19.99/mo"],desc:"The gym bro's bible. 5,000+ exercises with video demos. Target: experienced gym-goers who want structured programs."},
+    {name:"ZenBody",cls:"b",strengths:["Yoga & meditation","Beginner-friendly","Calming UX","Community feed"],weaknesses:["No strength training","Limited to yoga/pilates","No nutrition tracking"],desc:"Wellness-first approach. Target: women 25-45 interested in yoga, flexibility, and mindfulness. $9.99/mo."},
+    {name:"MealFit",cls:"c",strengths:["Nutrition tracking","Meal plans","Grocery lists","Calorie database"],weaknesses:["No workouts","No community","Utilitarian design","Can trigger disordered eating"],desc:"All nutrition, no exercise. Target: weight-conscious users tracking macros. $7.99/mo. Has been criticized for promoting obsessive tracking."}
+  ],
+  followUp:`Each owns a silo:
+- FitForce: Exercise/gym
+- ZenBody: Yoga/wellness
+- MealFit: Nutrition/diet
+
+Identify the positioning gap. Consider: what TREND is accelerating that none of these serve? What audience segment is growing fastest? Your proposal should feel like a 2025+ product, not a 2018 one.`,
+  context:"The gap is holistic health (exercise + nutrition + mental wellness) integrated into one experience, particularly for the growing 'health-curious moderate' who isn't a gym bro or a yoga devotee. The trend toward sustainable, balanced wellness vs extreme approaches.",
+  expectedKeywords:[
+    ["holistic","integrated","combined","all-in-one","whole","complete","unified"],
+    ["nutrition","exercise","mental","wellness","all three","combined","sleep"],
+    ["moderate","beginner","casual","normal","not extreme","balanced","sustainable"],
+    ["ai","personalized","adaptive","smart","learn","adjust","custom"],
+    ["habit","sustainable","lifestyle","long-term","not quick fix","consistency"],
+    ["trend","2025","longevity","zone 2","metabolic","wearable","data"]
+  ],
+  minMatches:4,
+  sampleAnswer:`BIGGEST GAP: Integrated, sustainable wellness for the "health-curious moderate"
+
+TREND ACCELERATING: The "longevity movement" - driven by Huberman, Peter Attia, Bryan Johnson coverage going mainstream. People want holistic health (exercise + nutrition + sleep + stress management) in one place. Not extreme, not obsessive - sustainable.
+
+UNSERVED AUDIENCE: The 30-45 year old who:
+- Isn't a gym bro (FitForce is intimidating)
+- Isn't a yoga person (ZenBody is too niche)
+- Doesn't want to obsessively count calories (MealFit can be triggering)
+- DOES want to be healthier in a balanced, sustainable way
+- IS interested in data from their Apple Watch/Oura ring
+
+PROPOSED POSITIONING: "The Longevity Stack"
+An AI-integrated wellness platform that connects exercise, nutrition, sleep, and stress into one adaptive system:
+
+- Syncs with wearables (Apple Watch, Oura, Whoop) for real-time health data
+- Balanced movement: strength + cardio + mobility (not gym-bro, not yoga-only)
+- Intuitive nutrition: meal quality scoring instead of calorie counting (avoids disordered eating triggers)
+- Sleep and recovery tracking integrated into exercise recommendations
+- Zone 2 cardio and metabolic health focus (the mainstream longevity trend)
+- $14.99/month (positioned between budget and premium)
+
+WHY THIS WINS:
+- FitForce can't add wellness without alienating their gym-bro brand
+- ZenBody can't add strength training without confusing their yoga identity
+- MealFit can't add exercise without becoming a completely different product
+- THIS product is native to the integration - it's not bolted on
+
+DEFENSIBILITY: Wearable data integration creates a switching cost and a personalization moat that deepens over time.`,
+  hints:[
+    "All three are SILOED: exercise only, yoga only, nutrition only. What does someone do who wants ALL of these in one place? They currently use 2-3 apps. That fragmentation IS the gap.",
+    "Think about 2025 health trends: longevity, metabolic health, wearable data, Zone 2 cardio, sustainable habits over quick fixes. Which of these three apps serves this movement? None of them.",
+    "The growing audience isn't 'fitness enthusiasts' or 'yoga people' - it's 'health-curious moderates' who want to be healthier without becoming obsessive. They're underserved by ALL three extremes.",
+    `💡 Prompt Reveal:\n\n"Find the gap by: (1) Identifying what TREND is growing that no competitor serves, (2) Finding the AUDIENCE that falls between existing silos, (3) Proposing a product that's native to the integration, not a Frankenstein of features, (4) Checking defensibility: could existing players easily add this? If they'd have to change their brand identity, that's a moat."\n\nThe strongest positioning gaps sit at the intersection of unserved trends and unsatisfied audiences.`
+  ],
+  successMsg:"This is visionary competitive analysis. You identified the longevity trend, the 'health-curious moderate' audience, and - critically - why existing players can't easily pivot to serve this gap without destroying their brand identity. That's structural defensibility.",
+  partialMsg:"You've identified the integration gap. Go deeper: (1) What SPECIFIC trend makes this gap urgent NOW? (2) Who is the person who falls between all three apps? (3) Why can't FitForce/ZenBody/MealFit easily expand to fill this gap?"
+},
+{
+  id:"C4",type:"Competitive Gap Spotting",difficulty:"Hard",title:"D2C Fashion Battleground",icon:"🟢",
+  setup:`Three D2C fashion brands compete for the same broad demographic (women 22-38):`,
+  cardType:"competitors",
+  competitors:[
+    {name:"Everly",cls:"a",strengths:["Sustainable fabrics","Transparent pricing","Ethical factories","Minimalist aesthetic"],weaknesses:["Limited styles","Muted colors only","Slow to restock","Premium price ($80-$200)"],desc:"The 'conscious consumer' brand. Every product has a sustainability story. Target: eco-aware, urban, willing to pay more."},
+    {name:"VibeCheck",cls:"b",strengths:["Trend-fast drops","Influencer collabs","Bold prints","$25-$60 range"],weaknesses:["Quality concerns","Not sustainable","Sizing inconsistency","High return rates"],desc:"Micro-trend machine. 40 new styles weekly. Target: Gen Z/young millennial, Instagram-first, trend-driven."},
+    {name:"HerForm",cls:"c",strengths:["Size-inclusive (00-32)","Fit guarantee","Body-positive marketing","Versatile basics"],weaknesses:["Conservative styles","Slow fashion cycle","Weak social media","Limited statement pieces"],desc:"The 'every body' brand. Size inclusivity is the core mission. Basics-heavy product line."}
+  ],
+  followUp:`Tricky landscape. These three overlap on demographics but own different VALUE territories:
+- Everly: Sustainability
+- VibeCheck: Trends/excitement
+- HerForm: Inclusivity/fit
+
+All three have passionate loyal audiences. Finding a gap here requires thinking beyond obvious demographics.
+
+Identify a positioning gap that:
+1. Doesn't directly attack any competitor's core strength
+2. Serves a real, growing need
+3. Could attract customers FROM all three brands
+4. Is defensible (not easy to copy)`,
+  context:"Hard competitive analysis with overlapping positions. The gap might be: versatile/modular wardrobe (capsule + mix-match), occasion-specific styling (work-to-evening), tech-integrated personalization, or community-driven co-creation.",
+  expectedKeywords:[
+    ["versatile","capsule","modular","mix","match","fewer pieces","wardrobe","system"],
+    ["occasion","work","evening","transition","multi-purpose","lifestyle"],
+    ["personal","style","ai","recommend","custom","individual","unique","curated"],
+    ["community","co-create","vote","design","input","together","collab"],
+    ["not attack","complement","attract from","pull","alongside","steal"],
+    ["defensible","moat","hard to copy","unique","data","network","switching"]
+  ],
+  minMatches:4,
+  sampleAnswer:`POSITIONING GAP: "The Wardrobe System" - Intelligent capsule wardrobing
+
+INSIGHT: All three brands sell CLOTHES. None of them sell a WARDROBE STRATEGY. Women 25-38 don't have a "clothes problem" - they have a "nothing to wear despite a full closet" problem. The gap isn't a category - it's a layer above.
+
+PROPOSED BRAND: "Capsul"
+
+POSITIONING: A curated wardrobe system where every piece is designed to work with every other piece. Buy fewer, wear more, look better.
+
+HOW IT WORKS:
+- Core collection: 30 interchangeable pieces per season (not 300 random items)
+- AI style engine: photograph your existing closet → get a personalized capsule recommendation that fills gaps
+- Every product page shows 10+ outfit combinations with other Capsul pieces
+- "Complete the look" is the primary CTA, not "Add to cart"
+- Modular pricing: individual pieces ($50-$120) or full capsule packs ($350 for a 10-piece coordinated wardrobe)
+
+WHY IT ATTRACTS FROM ALL THREE:
+- From Everly: "I love sustainability but want more variety and styling guidance"
+- From VibeCheck: "I'm tired of buying 40 pieces that don't go together"
+- From HerForm: "I want basics that actually look styled, not just comfortable"
+
+DEFENSIBILITY:
+1. DATA MOAT: The AI wardrobe engine gets smarter with every closet photographed. Competitors can't replicate this without the data.
+2. SYSTEM LOCK-IN: Once you own 10 pieces designed to interwork, switching brands means starting over.
+3. BRAND TERRITORY: "Wardrobe system" is a new category - first mover defines it.
+
+WHAT COMPETITORS WOULD HAVE TO SACRIFICE TO COPY THIS:
+- Everly: Would have to expand beyond sustainable materials (their identity)
+- VibeCheck: Would have to REDUCE new styles (antithetical to their model)
+- HerForm: Would have to invest heavily in design cohesion and tech`,
+  hints:[
+    "All three sell individual products. What if the gap isn't another TYPE of clothing, but a different APPROACH to building a wardrobe? Think about the problem above individual pieces.",
+    "Women 25-38 report their #1 fashion frustration isn't finding clothes they like - it's that their closet is full but 'nothing goes together.' None of these brands solve THAT problem. What would?",
+    "For defensibility, look for: data advantages (AI learning from users), network effects (community), or system switching costs (once you're in, leaving is painful). Which gap creates these moats?",
+    `💡 Prompt Reveal:\n\n"In a crowded competitive landscape, look for gaps ONE LEVEL ABOVE the product category. If competitors sell X, the gap might be in HOW people use/experience X, not in a better version of X. Test: (1) Does your positioning create a new category? (2) Does it attract from ALL competitors, not just one? (3) Does it create switching costs that deepen over time?"\n\nThe strongest positioning doesn't compete with existing players - it reframes the entire category.`
+  ],
+  successMsg:"This is world-class competitive strategy. You found a gap not in the product (more clothes) but in the LAYER ABOVE (wardrobe intelligence). The AI closet engine creates a data moat, the system design creates switching costs, and the 'buy fewer, wear more' message actually pulls from sustainability, trend, AND basics shoppers simultaneously. That's category creation, not competition.",
+  partialMsg:"You've identified a gap. Test it against ALL FOUR criteria: (1) Does it avoid attacking competitors' core strengths? (2) Is the need real and growing? (3) Could it attract customers from ALL THREE brands? (4) Is it defensible - could Everly/VibeCheck/HerForm easily copy it without changing their identity?"
+}
+];
+
+// ═══════════════════════════════════════════════════════════
+// ENGINE
+// ═══════════════════════════════════════════════════════════
+let S={ph:"welcome",q:[],i:-1,hu:0,hh:[],sc:[],pm:null,cc:null};
+const $m=document.getElementById("M"),$i=document.getElementById("I"),$s=document.getElementById("bS"),
+  $pf=document.getElementById("pF"),$pt=document.getElementById("pT"),$rp=document.getElementById("rp"),$rc=document.getElementById("rc");
+function scr(){setTimeout(()=>$m.scrollTop=$m.scrollHeight,60)}
+function uP(){$pf.style.width=(S.sc.length/12*100)+"%";$pt.textContent=S.sc.length+"/12"}
+function eI(on,p){$i.disabled=!on;$s.disabled=!on;$i.placeholder=p||(on?"Type your strategic analysis...":"Select an option above...");if(on)$i.focus()}
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+
+function addB(t,st,btns){
+  const r=document.createElement("div");r.className="row b";
+  const b=document.createElement("div");b.className="bub b"+(st?" "+st:"");b.textContent=t;r.appendChild(b);
+  if(btns&&btns.length){const g=document.createElement("div");g.className="bg";btns.forEach(l=>{const bt=document.createElement("button");bt.className="pill";bt.textContent=l;bt.onclick=()=>hB(l);g.appendChild(bt)});r.appendChild(g)}
+  $m.appendChild(r);scr();
+}
+function addU(t){const r=document.createElement("div");r.className="row u";const b=document.createElement("div");b.className="bub u";b.textContent=t;r.appendChild(b);$m.appendChild(r);scr()}
+
+function addCampaignCard(d){
+  const r=document.createElement("div");r.className="row b";
+  const c=document.createElement("div");c.className="data-card";c.style.maxWidth="95%";
+  let h=`<div class="dc-head ${d.style}">${d.title}</div><div class="dc-body"><div class="metrics">`;
+  d.metrics.forEach(m=>{h+=`<div class="metric"><div class="metric-val ${m.c}">${m.v}</div><div class="metric-label">${m.l}</div></div>`});
+  h+=`</div><div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;line-height:1.6;white-space:pre-wrap;color:var(--text2)">${esc(d.details)}</div></div>`;
+  c.innerHTML=h;r.appendChild(c);$m.appendChild(r);scr();
+}
+
+function addCompCards(comps){
+  const r=document.createElement("div");r.className="row b";
+  const w=document.createElement("div");w.style.maxWidth="95%";
+  let h='<div class="comp-row">';
+  comps.forEach(c=>{
+    h+=`<div class="comp-card ${c.cls}"><div class="comp-name">${c.name}</div>`;
+    h+=`<div style="margin:6px 0">`;c.strengths.forEach(s=>{h+=`<span class="comp-tag str">✓ ${s}</span>`});h+=`</div>`;
+    h+=`<div>`;c.weaknesses.forEach(w=>{h+=`<span class="comp-tag wk">✗ ${w}</span>`});h+=`</div>`;
+    h+=`<div class="comp-desc">${c.desc}</div></div>`;
+  });
+  h+='</div>';w.innerHTML=h;r.appendChild(w);$m.appendChild(r);scr();
+}
+
+function ev(t,ch){const lo=t.toLowerCase();let m=0;ch.expectedKeywords.forEach(g=>{if(g.some(k=>lo.includes(k.toLowerCase())))m++});
+  if(m>=ch.minMatches)return"correct";if(m/ch.expectedKeywords.length>=.3)return"partial";return"incorrect"}
+function gA(){const h=S.hh;if(h.length<2)return null;const a=h.slice(-2).reduce((x,y)=>x+y,0)/2;
+  if(a<=1)return{t:"🔥 Sharp strategic eye. Leveling up."};if(a>=3)return{t:"🧠 Strategy takes time. Think big picture."};return null}
+
+// PANEL
+function rC(ch){if(!ch){$rc.innerHTML="";return}
+  let h=`<div class="rp-t">${ch.icon} Context</div><div class="rp-s">${ch.type} | ${ch.difficulty}</div>
+    <div class="card"><div class="card-l">Objective</div><div class="card-t">${ch.context}</div></div>
+    <div class="card"><div class="card-l">Keywords</div><div style="margin-top:6px">`;
+  ch.expectedKeywords.flat().slice(0,14).forEach(k=>{h+=`<span class="tag">${esc(k)}</span>`});
+  h+=`</div></div><div class="card"><div class="card-l">Hints</div><div class="hdots">`;
+  for(let i=1;i<=4;i++)h+=`<div class="hd ${i<=S.hu?'on':'off'}">${i}</div>`;
+  h+=`</div></div>`;
+  if(S.sc.length){h+=`<div class="card"><div class="card-l">Results</div>`;S.sc.forEach(s=>{h+=`<div class="sc-r"><span style="color:var(--text2)">${s.id}</span><span style="color:${s.r==='correct'?'var(--mint)':'var(--gold)'}">${s.r==='correct'?'✅':'💡'} ${s.h}h</span></div>`});h+=`</div>`}
+  $rc.innerHTML=h}
+function rR(){let h=`<div class="rp-t">📋 Demo Reference</div><p class="rp-s">Sample answers for each challenge.</p>`;
+  CH.forEach(c=>{const sa=c.sampleAnswer.length>260?c.sampleAnswer.substring(0,260)+"...":c.sampleAnswer;
+    h+=`<div class="ref-c"><div class="ref-c-t">${c.icon} ${c.id}: ${c.title}</div><div class="ref-c-m">${c.difficulty} | ${c.type}</div><div class="ref-c-s">${esc(sa)}</div></div>`});$rc.innerHTML=h}
+function tRef(){if(S.pm==="ref"){S.pm=null;$rp.classList.remove("open");document.getElementById("btnRef").textContent="📋 Demo"}
+  else{S.pm="ref";$rp.classList.add("open");rR();document.getElementById("btnRef").textContent="Hide"}}
+function tCtx(){if(S.pm==="ctx"){S.pm=null;$rp.classList.remove("open")}else{S.pm="ctx";$rp.classList.add("open");rC(S.cc)}}
+function sC(ch){S.cc=ch;if(S.pm==="ctx")rC(ch)}
+
+// FLOW
+function present(){
+  const ch=S.q[S.i];S.hu=0;sC(ch);
+  const a=gA();if(a)addB(a.t,"adaptive");
+  addB(`── ${ch.icon} ${ch.type} | ${ch.id} | ${ch.difficulty} ──\n\n${ch.title}`,"header");
+  setTimeout(()=>{
+    addB(ch.setup);
+    if(ch.cardType==="campaign")setTimeout(()=>{addCampaignCard(ch.cardData);setTimeout(()=>{addB(ch.followUp);S.ph="challenge";eI(true)},400)},300);
+    else if(ch.cardType==="competitors")setTimeout(()=>{addCompCards(ch.competitors);setTimeout(()=>{addB(ch.followUp);S.ph="challenge";eI(true)},400)},300);
+    else{S.ph="challenge";eI(true)}
+  },300);
+}
+function advance(){S.i++;if(S.i>=S.q.length){S.ph="allDone";sC(null);const c=S.sc.filter(x=>x.r==="correct").length,th=S.sc.reduce((a,x)=>a+x.h,0);
+    const v=c>=10?"Strategic mastermind. You see what others miss.":c>=7?"Strong strategic instincts. Sharpen the areas where you needed hints.":"Good foundation. Revisit the frameworks in Hint 4 - they're reusable strategy tools.";
+    addB(`🏁 Campaign complete!\n\nStrategic wins: ${c}/${S.sc.length}\nHints deployed: ${th}\n\n${v}`,"summary");
+    setTimeout(()=>{addB("Run it again?",null,["🔴 Strategy Diagnosis","🟡 Audience Building","🟢 Gap Spotting","▶️ Full Campaign"]);S.ph="selectType";eI(false)},600);return}
+  present()}
+function sOk(ch){addB("✅ "+ch.successMsg,"success");S.sc.push({id:ch.id,r:"correct",h:S.hu});S.hh.push(S.hu);uP();
+  setTimeout(()=>{addB("Next challenge.",null,["▶️ Next","📋 Model Answer"]);S.ph="hint";eI(false)},300)}
+function sFull(ch){addB("Here's the model answer:\n\n"+ch.sampleAnswer,"answer");
+  setTimeout(()=>{S.sc.push({id:ch.id,r:"hinted",h:4});S.hh.push(4);uP();addB("Study this strategic analysis.",null,["▶️ Next"]);S.ph="hint";eI(false)},400)}
+
+function hB(l){addU(l);
+  if(S.ph==="selectType"){let q;
+    if(l.includes("Diagnosis"))q=CH.filter(c=>c.type==="Strategy Diagnosis");
+    else if(l.includes("Audience"))q=CH.filter(c=>c.type==="Audience Building");
+    else if(l.includes("Gap"))q=CH.filter(c=>c.type==="Competitive Gap Spotting");
+    else q=[...CH];
+    S.q=q;S.i=0;S.sc=[];S.hh=[];uP();present();return}
+  if(l==="💡 Hint"){const ch=S.q[S.i],hi=S.hu;if(hi<4){addB(`Hint ${hi+1}/4:\n\n${ch.hints[hi]}`,"hint");S.hu=hi+1;sC(ch);if(hi+1===4)setTimeout(()=>sFull(ch),300)}return}
+  if(l==="▶️ Next"){advance();return}
+  if(l==="📋 Model Answer"){addB("Model answer:\n\n"+S.q[S.i].sampleAnswer,"answer");return}
+}
+function go(){const t=$i.value.trim();if(!t||S.ph!=="challenge")return;$i.value="";$i.style.height="auto";addU(t);
+  const ch=S.q[S.i],r=ev(t,ch);
+  setTimeout(()=>{if(r==="correct")sOk(ch);
+    else if(r==="partial"){addB("🔶 "+ch.partialMsg,"partial");setTimeout(()=>addB("Sharpen your analysis or get a strategic hint.",null,["💡 Hint"]),200)}
+    else{addB("Not the core strategic issue. Dig deeper.","incorrect");setTimeout(()=>addB("Try again or get a hint.",null,["💡 Hint"]),200)}},400)}
+
+// INIT
+(function(){
+  addB("Welcome to the Campaign Strategy Lab. 🎯");
+  setTimeout(()=>{
+    addB("12 challenges that separate strategic marketers from tactical operators:\n\n🔴 Strategy Diagnosis (4) - Find the root cause in failing campaigns\n🟡 Audience Building (4) - Construct personas that survive contact with reality\n🟢 Competitive Gap Spotting (4) - Find the white space your competitors can't reach\n\nReal campaign data. Real competitive landscapes. No textbook answers.");
+    setTimeout(()=>{addB("Every challenge has 4 progressive hints. Hint 4 reveals a reusable strategic framework.\n\nPick your battleground.",null,
+      ["🔴 Strategy Diagnosis","🟡 Audience Building","🟢 Gap Spotting","▶️ Full Campaign"]);S.ph="selectType"},300)
+  },200);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice Bot - Logic & Decomposition | AICS-M01-S01-BOT01</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1E88E5;
+    --primary-dark: #1565C0;
+    --primary-light: #E3F2FD;
+    --secondary: #29B6F6;
+    --success: #4CAF50;
+    --success-light: #E8F5E9;
+    --warning: #FFB300;
+    --warning-light: #FFF8E1;
+    --error: #E53935;
+    --error-light: #FFEBEE;
+    --bg: #FFFFFF;
+    --bot-bubble: #F5F5F5;
+    --user-bubble: #1E88E5;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --surface: #FAFAFA;
+    --border: #E0E0E0;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Google Sans', 'Roboto', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+  }
+  .app { display: flex; height: 100vh; }
+
+  /* ── Chat Panel ── */
+  .chat-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .chat-header {
+    padding: 12px 16px;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .chat-header-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .chat-header-info h1 { font-size: 15px; font-weight: 700; }
+  .chat-header-info span { font-size: 11px; opacity: 0.85; }
+  .chat-header-actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn-ref {
+    background: rgba(255,255,255,0.2); border: none; color: #fff;
+    border-radius: var(--radius-sm); padding: 6px 12px; cursor: pointer;
+    font-size: 11px; font-weight: 600; font-family: inherit;
+    transition: background 0.15s;
+  }
+  .btn-ref:hover { background: rgba(255,255,255,0.35); }
+
+  /* Progress */
+  .progress-bar {
+    padding: 6px 16px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  }
+  .progress-label { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
+  .progress-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--success); border-radius: 3px; transition: width 0.4s; }
+
+  /* Messages */
+  .messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .msg-row { display: flex; flex-direction: column; }
+  .msg-row.user { align-items: flex-end; }
+  .msg-row.bot { align-items: flex-start; }
+
+  .bubble {
+    max-width: 85%; padding: 12px 16px; border-radius: var(--radius-lg);
+    font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+  }
+  .bubble.bot {
+    background: var(--bot-bubble); color: var(--text-primary);
+    border-top-left-radius: 4px;
+  }
+  .bubble.user {
+    background: var(--user-bubble); color: #fff;
+    border-top-right-radius: 4px;
+  }
+  .bubble.hint { background: var(--warning-light); border-left: 3px solid var(--warning); }
+  .bubble.success { background: var(--success-light); border-left: 3px solid var(--success); }
+  .bubble.answer { background: var(--primary-light); border-left: 3px solid var(--primary); }
+  .bubble.header {
+    background: transparent; font-weight: 700; font-size: 15px; color: var(--primary);
+  }
+  .bubble.incorrect { background: var(--error-light); border-left: 3px solid var(--error); }
+  .bubble.partial { background: #FFF3E0; border-left: 3px solid #FF9800; }
+  .bubble.summary { background: var(--success-light); border-left: 3px solid var(--success); font-size: 15px; }
+  .bubble.adaptive { font-style: italic; font-size: 13px; }
+  .bubble.adaptive.boost { background: var(--primary-light); }
+  .bubble.adaptive.support { background: var(--warning-light); }
+
+  /* Buttons */
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .btn-pill {
+    background: transparent; border: 1.5px solid var(--primary); color: var(--primary);
+    border-radius: 20px; padding: 8px 16px; cursor: pointer; font-size: 13px;
+    font-weight: 600; font-family: inherit; transition: all 0.15s;
+  }
+  .btn-pill:hover { background: var(--primary); color: #fff; }
+
+  /* Input */
+  .input-bar {
+    padding: 12px 16px; border-top: 1px solid var(--border);
+    display: flex; gap: 8px; background: var(--bg); flex-shrink: 0;
+  }
+  .input-bar input {
+    flex: 1; padding: 10px 16px; border-radius: 24px;
+    border: 1.5px solid var(--border); font-size: 14px; font-family: inherit;
+    outline: none; background: #fff;
+  }
+  .input-bar input:focus { border-color: var(--primary); }
+  .input-bar input:disabled { background: var(--surface); }
+  .btn-send {
+    background: var(--primary); color: #fff; border: none; border-radius: 24px;
+    padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: background 0.15s;
+  }
+  .btn-send:disabled { background: var(--border); cursor: default; }
+  .btn-send:not(:disabled):hover { background: var(--primary-dark); }
+
+  /* ── Right Panel ── */
+  .right-panel {
+    width: 0; overflow: hidden; border-left: 1px solid var(--border);
+    background: var(--surface); flex-shrink: 0; display: flex;
+    flex-direction: column; transition: width 0.3s;
+  }
+  .right-panel.open { width: 370px; }
+  .right-panel-inner { padding: 16px; overflow-y: auto; flex: 1; }
+  .panel-title { font-weight: 700; font-size: 15px; margin-bottom: 12px; color: var(--primary); }
+  .panel-subtitle { font-size: 11px; color: var(--text-secondary); margin-bottom: 16px; }
+
+  .card {
+    padding: 12px; background: #fff; border-radius: var(--radius-md);
+    border: 1px solid var(--border); margin-bottom: 12px;
+  }
+  .card-label { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .card-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+  .tag {
+    display: inline-block; font-size: 10px; padding: 2px 8px;
+    background: var(--surface); border-radius: 10px; border: 1px solid var(--border);
+    color: var(--text-secondary); margin: 2px;
+  }
+
+  .hint-dots { display: flex; gap: 6px; margin-top: 4px; }
+  .hint-dot {
+    width: 28px; height: 28px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+  }
+  .hint-dot.used { background: var(--warning); color: #fff; border: 1px solid var(--warning); }
+  .hint-dot.unused { background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border); }
+
+  .score-row {
+    display: flex; justify-content: space-between; font-size: 11px;
+    padding: 4px 0; border-bottom: 1px solid var(--surface);
+  }
+  .score-row:last-child { border-bottom: none; }
+
+  /* Reference Cards */
+  .ref-card {
+    padding: 12px; background: #fff; border-radius: var(--radius-md);
+    border: 1px solid var(--border); margin-bottom: 10px;
+  }
+  .ref-card-title { font-size: 12px; font-weight: 700; color: var(--primary); }
+  .ref-card-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .ref-card-sample {
+    margin-top: 6px; padding: 8px; background: var(--surface);
+    border-radius: 6px; white-space: pre-wrap; font-size: 10px; line-height: 1.4;
+    max-height: 120px; overflow-y: auto;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .right-panel.open { width: 100%; position: absolute; right: 0; top: 0; bottom: 0; z-index: 10; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Chat Panel -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <div class="chat-header-avatar">🧠</div>
+      <div class="chat-header-info">
+        <h1>Logic & Decomposition Practice Lab</h1>
+        <span>AICS-M01-S01-BOT01 | 12 Challenges</span>
+      </div>
+      <div class="chat-header-actions">
+        <button class="btn-ref" id="btnRef" onclick="toggleReference()">📋 Demo Reference</button>
+        <button class="btn-ref" id="btnPanel" onclick="togglePanel()">Context ▸</button>
+      </div>
+    </div>
+    <div class="progress-bar">
+      <span class="progress-label">Progress</span>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <span class="progress-label" id="progressText">0/12</span>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="input-bar">
+      <input type="text" id="userInput" placeholder="Select an option above..." disabled
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey)handleSubmit()">
+      <button class="btn-send" id="btnSend" disabled onclick="handleSubmit()">Send</button>
+    </div>
+  </div>
+  <!-- Right Panel -->
+  <div class="right-panel" id="rightPanel">
+    <div class="right-panel-inner" id="rightPanelContent"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// CHALLENGE DATA
+// ═══════════════════════════════════════════════════════════════════
+const CHALLENGES = [
+  // ── TYPE A: DECOMPOSITION ──
+  {
+    id:"A1", type:"Decomposition", difficulty:"Easy", title:"Workshop Planning", icon:"🧩",
+    setup:"Your team needs to organize a 2-hour training workshop for 20 new hires next Friday.\n\nBreak this problem down into sub-tasks. List them in the order they should be completed.",
+    context:"A straightforward planning task. The learner should identify at least 4 distinct sub-tasks in a logical sequence.",
+    expectedKeywords:[
+      ["agenda","schedule","outline","plan content","topics"],
+      ["venue","room","book","space","location"],
+      ["invite","notify","email","calendar","send"],
+      ["materials","slides","handouts","prepare content","presentation"],
+      ["equipment","projector","laptop","setup","tech"],
+      ["feedback","follow-up","survey","review"]
+    ],
+    minMatches:4,
+    sampleAnswer:"1. Define the workshop agenda and learning objectives\n2. Book a meeting room with AV equipment\n3. Prepare training materials (slides, handouts)\n4. Send calendar invites to all 20 new hires\n5. Set up equipment and test AV on the day\n6. Conduct workshop and collect feedback after",
+    hints:[
+      "Think about what needs to happen BEFORE the workshop day vs. ON the day. What's the very first thing you'd need to decide?",
+      "Good decomposition covers: content preparation, logistics, communication, and follow-up. Which of these are you missing?",
+      "Here's a similar example: To host a dinner party, you'd: (1) Plan menu, (2) Buy groceries, (3) Send invites, (4) Cook, (5) Set table, (6) Clean up. Notice how each step depends on the previous one. Apply the same thinking.",
+      "💡 Prompt Reveal:\n\n\"Break down 'organize a training workshop' into sequential sub-tasks covering: content planning, logistics, communication, execution, and follow-up.\"\n\nThis works because it identifies the major categories first, then asks for sequencing within each."
+    ],
+    successMsg:"Solid decomposition! You identified the key work streams and sequenced them logically. Notice how each task has a clear dependency on what comes before it.",
+    partialMsg:"You're on the right track, but a few areas are missing. A complete decomposition should cover: content prep, logistics, communication to attendees, day-of execution, and post-workshop follow-up."
+  },
+  {
+    id:"A2", type:"Decomposition", difficulty:"Medium-Easy", title:"Loyalty Program Launch", icon:"🧩",
+    setup:"A retail chain with 15 stores wants to launch a customer loyalty program. Customers earn points on purchases and redeem them for discounts.\n\nDecompose this into sub-tasks. Think about what different teams would need to do and in what order.",
+    context:"Cross-functional decomposition. The learner should identify tasks across business, tech, operations, and marketing.",
+    expectedKeywords:[
+      ["define","rules","tiers","structure","design program","points system","rewards"],
+      ["pos","system","software","update","integrate","tech","database","crm"],
+      ["train","staff","cashiers","employees","educate"],
+      ["communicate","market","announce","customers","launch campaign","promote"],
+      ["pilot","test","trial","one store","soft launch"],
+      ["track","metrics","measure","kpi","analytics","monitor"],
+      ["legal","terms","privacy","policy","compliance"]
+    ],
+    minMatches:5,
+    sampleAnswer:"1. Define program structure: point earn rates, tiers, redemption rules\n2. Draft terms & conditions, privacy policy for customer data\n3. Update POS systems and build a customer database/CRM integration\n4. Pilot in 2-3 stores, gather feedback, fix issues\n5. Train all store staff on enrollment and redemption process\n6. Launch marketing campaign (in-store signage, email, social)\n7. Full rollout across 15 stores\n8. Monitor KPIs: enrollment rate, redemption rate, repeat visits",
+    hints:[
+      "This isn't just a marketing task. Think about which departments are involved: business strategy, IT, operations, marketing, legal. What does each need to do?",
+      "A common mistake is going straight to 'tell customers.' Before that, you need the program designed, the systems built, the staff trained, and ideally a pilot run. What's the right sequence?",
+      "Similar example: Launching a new menu item at a restaurant chain requires: (1) Recipe development, (2) Cost analysis, (3) Supplier sourcing, (4) Kitchen training, (5) Menu/POS update, (6) Marketing, (7) Pilot at select locations, (8) Full rollout. See how it flows from design → build → test → launch?",
+      "💡 Prompt Reveal:\n\n\"Decompose 'launch a loyalty program for a 15-store retail chain' into sub-tasks organized by: program design, technical implementation, staff readiness, customer communication, testing, rollout, and measurement.\"\n\nThis prompt works because naming the work streams ensures nothing gets missed."
+    ],
+    successMsg:"Excellent! You thought across multiple teams and identified dependencies. The sequence from design → build → test → train → launch → measure is exactly how complex cross-functional initiatives should be decomposed.",
+    partialMsg:"Good start, but consider: did you account for the technology changes needed? Staff training? A pilot before full rollout? Legal/privacy requirements for collecting customer data?"
+  },
+  {
+    id:"A3", type:"Decomposition", difficulty:"Medium", title:"Data Migration", icon:"🧩",
+    setup:"Your company has 50,000 customer records spread across dozens of Excel spreadsheets maintained by different regional offices. You need to migrate all of it into a new centralized CRM platform.\n\nDecompose this into sub-tasks. Pay special attention to dependencies - what MUST happen before what?",
+    context:"Technical project decomposition with critical dependencies, data quality concerns, and rollback considerations.",
+    expectedKeywords:[
+      ["audit","inventory","assess","catalog","discover"],
+      ["clean","quality","deduplicate","standardize","format","normalize"],
+      ["map","fields","schema","structure","transform","mapping"],
+      ["test","pilot","batch","sample","validate","trial"],
+      ["migrate","import","transfer","load","run migration"],
+      ["validate","verify","reconcile","check","compare counts"],
+      ["train","users","team","documentation","onboard"],
+      ["rollback","backup","fallback","recovery","contingency"],
+      ["cutover","switch","go-live","decommission","retire"]
+    ],
+    minMatches:6,
+    sampleAnswer:"1. Audit: Inventory all spreadsheets, identify owners, document schemas\n2. Map: Define target CRM schema, map source fields to destination\n3. Clean: Standardize formats, deduplicate records, fix quality issues\n4. Backup: Full backups of all source data (rollback safety net)\n5. Test migration: Pilot with 1,000 records from one region, validate\n6. Fix issues from pilot, re-map if needed\n7. Full migration: Batch process all 50,000 records\n8. Validate: Reconcile counts, spot-check accuracy\n9. Train users on new CRM\n10. Cutover: Retire old spreadsheets, CRM is single source of truth",
+    hints:[
+      "Before you move any data, you need to understand what you have. What's the first step when dealing with messy, distributed data?",
+      "Data migration follows a pattern: Discover → Clean → Map → Test → Migrate → Validate. Also think about safety nets - what if something goes wrong?",
+      "Similar example: Moving physical files from 10 offices to one archive: (1) Catalog each office, (2) Create unified filing system, (3) Remove duplicates, (4) Move one office first as test, (5) Fix issues, (6) Move remaining, (7) Verify all arrived, (8) Train staff. Same pattern.",
+      "💡 Prompt Reveal:\n\n\"Plan a data migration of 50,000 records from scattered spreadsheets to a CRM. Include: discovery, data quality, field mapping, backup/rollback, pilot testing, full migration, validation, user training, and decommissioning. List dependencies.\"\n\nComprehensive because it names each phase and asks for dependencies."
+    ],
+    successMsg:"Strong work! You identified the critical phases and included safety measures like backups and validation. In real migrations, the 'boring' steps (audit, clean, validate) prevent disasters.",
+    partialMsg:"You've got the core migration steps, but consider: What about data quality? What if the migration fails halfway - rollback plan? How do you know the migrated data is correct?"
+  },
+  {
+    id:"A4", type:"Decomposition", difficulty:"Hard", title:"Multi-Market Feature Launch", icon:"🧩",
+    setup:"An ed-tech startup is launching a new AI-powered quiz feature. It must go live simultaneously in 3 languages (English, Hindi, Tamil), on both iOS and Android, with accessibility compliance, in 8 weeks.\n\nDecompose this into sub-tasks. Identify which tasks can run in parallel vs. sequential. Flag critical-path items that could delay the whole launch.",
+    context:"Complex multi-workstream project with parallelism, critical path analysis, and cross-cutting concerns.",
+    expectedKeywords:[
+      ["design","ux","prototype","wireframe","spec","requirements"],
+      ["develop","build","code","api","backend","frontend","implement"],
+      ["translate","localize","i18n","language","l10n","multilingual"],
+      ["accessibility","a11y","wcag","screen reader","compliance"],
+      ["test","qa","quality","bug","regression"],
+      ["parallel","concurrent","simultaneous","independent"],
+      ["critical path","blocker","dependency","sequential","bottleneck"],
+      ["ios","android","mobile","platform","cross-platform"],
+      ["deploy","release","launch","go-live","rollout"],
+      ["monitor","metrics","analytics","track","post-launch"]
+    ],
+    minMatches:7,
+    sampleAnswer:"SEQUENTIAL (Critical Path):\n1. Define requirements and AI model specs (Week 1)\n2. Design UI/UX with accessibility baked in (Week 2)\n3. Build backend API + AI quiz engine (Week 2-5) ← CRITICAL\n4. Integration testing across all platforms (Week 6)\n5. Staged rollout: soft launch → full launch (Week 7-8)\n\nPARALLEL WORKSTREAMS:\n- iOS frontend (Week 3-5)\n- Android frontend (Week 3-5)\n- Localization: EN → Hindi, Tamil (Week 3-5)\n- Accessibility audit and fixes (Week 4-6)\n- QA test case prep (Week 3-5)\n\nCRITICAL PATH: Backend API is the bottleneck",
+    hints:[
+      "With 8 weeks and 3 languages × 2 platforms, you can't do everything sequentially. What tasks are INDEPENDENT and can run at the same time?",
+      "Think in workstreams: Design, Backend, iOS, Android, Localization, Accessibility, QA, Launch. Which depend on others being done first? That's your critical path.",
+      "Similar: Building a house has parallel workstreams. Foundation first (critical path). Once done, plumbing, electrical, and framing in parallel. Painting depends on all three. What's the 'foundation' here?",
+      "💡 Prompt Reveal:\n\n\"Decompose a multi-platform, multilingual feature launch into workstreams. For each: tasks, duration, dependencies, parallel opportunities. Flag the critical path - the longest sequence of dependent tasks.\"\n\nExplicitly asking for parallel vs. sequential and critical path identification."
+    ],
+    successMsg:"Impressive! You identified parallel workstreams, the critical path, and cross-cutting concerns. This is exactly how experienced project managers plan complex launches.",
+    partialMsg:"You've identified main tasks, but the hard part is parallelism analysis. Which run simultaneously? What's the one task that delays everything if it slips? That's your critical path."
+  },
+  // ── TYPE B: BOOLEAN LOGIC ──
+  {
+    id:"B1", type:"Boolean Logic", difficulty:"Easy", title:"Coffee Shop Discount", icon:"🔣",
+    setup:"A coffee shop has this rule:\n\n\"A customer gets a free cookie if they order a large coffee AND visit before 10 AM.\"\n\nWrite this as a logical expression using AND, OR, NOT.",
+    context:"Simple two-condition AND statement.",
+    expectedKeywords:[["large","size"],["and","&&"],["10","before","morning","time","am"]],
+    minMatches:3,
+    sampleAnswer:"free_cookie = (order_size == \"large\") AND (visit_time < 10:00 AM)",
+    hints:[
+      "There are exactly two conditions. Both must be true. Which logical operator means 'both must be true'?",
+      "AND means both conditions must be met. Condition 1: order size is large. Condition 2: time before 10 AM. Combine them.",
+      "Similar: 'Enter VIP lounge if you have a ticket AND are over 21' → access = has_ticket AND age > 21. Same pattern.",
+      "💡 Prompt Reveal:\n\n\"Convert to Boolean: 'Free cookie if large coffee and before 10 AM.' Use variables: order_size, visit_time.\"\n\nIdentifies variables and asks for a formal expression."
+    ],
+    successMsg:"Correct! A simple AND - both conditions must be true. This pattern powers loyalty programs, access control, and more.",
+    partialMsg:"Close! Make sure you're using AND (not OR) - the customer needs BOTH conditions to be true."
+  },
+  {
+    id:"B2", type:"Boolean Logic", difficulty:"Medium-Easy", title:"Spam Detection", icon:"🔣",
+    setup:"An email system should flag a message as spam if:\n\n- The sender is NOT in the contact list AND the message contains more than 3 links\n  OR\n- The message has been reported as spam by 3 or more users\n\nWrite the logical expression. Be careful with grouping!",
+    context:"Nested AND/OR with grouping. Tests operator precedence understanding.",
+    expectedKeywords:[
+      ["not","!","unknown","not in contact"],
+      ["and","&&"],
+      ["links",">3","more than 3","contains link"],
+      ["or","||"],
+      ["report","spam",">=3","3 or more","flagged"]
+    ],
+    minMatches:4,
+    sampleAnswer:"is_spam = (NOT in_contact_list AND link_count > 3) OR (spam_reports >= 3)",
+    hints:[
+      "Two separate ways an email can be flagged. What logical operator connects alternative paths?",
+      "Structure: (Condition Group 1) OR (Condition Group 2). Group 1 has two conditions joined by AND. Parentheses show grouping.",
+      "Similar: 'Sound alarm if (temp > 100 AND pressure > 500) OR (emergency_button pressed)' → alarm = (temp > 100 AND pressure > 500) OR (emergency_pressed). Two trigger paths.",
+      "💡 Prompt Reveal:\n\n\"Convert to Boolean: 'Flag spam if (sender unknown AND >3 links) OR (3+ spam reports).' Variables: in_contact_list, link_count, spam_reports. Show parenthetical grouping.\"\n\nParentheses make precedence explicit."
+    ],
+    successMsg:"Spot on! The parentheses are crucial. Without them, the expression can be misinterpreted. Production spam filters chain many such rules.",
+    partialMsg:"Check your grouping. Two OR branches need clear separation: (unknown sender AND many links) is one branch, (enough reports) is the other."
+  },
+  {
+    id:"B3", type:"Boolean Logic", difficulty:"Medium", title:"Loan Approval Engine", icon:"🔣",
+    setup:"A lending platform auto-approves loans with this rule:\n\nApprove if:\n- (5+ years experience OR a master's degree)\n- AND passed the credit check\n- AND do NOT have (an existing default OR a pending legal case)\n\nWrite the complete logical expression.",
+    context:"Three-clause expression with nested OR inside AND, and NOT with nested OR.",
+    expectedKeywords:[
+      ["experience","5","years",">=5"],["or","||"],
+      ["master","degree","education"],["and","&&"],
+      ["credit","check","passed"],["not","!"],
+      ["default","existing"],["legal","case","pending"]
+    ],
+    minMatches:6,
+    sampleAnswer:"approve = (experience >= 5 OR degree == \"masters\") AND credit_check_passed AND NOT (has_default OR pending_legal_case)",
+    hints:[
+      "Three main clauses connected by AND. First has an OR inside, third is a NOT with an OR inside.",
+      "Structure: [Qualification] AND [Credit] AND NOT [Disqualification]. Each clause has its own internal logic.",
+      "Similar: 'Admit if (GPA > 3.5 OR SAT > 1400) AND (prereqs done) AND NOT (probation OR honor code violation)' - same three-clause pattern.",
+      "💡 Prompt Reveal:\n\n\"Convert loan approval to Boolean: (5+ years OR masters) AND (passed credit) AND NOT (default OR legal case). Variables: experience_years, degree, credit_check_passed, has_default, pending_legal.\"\n\nKey: NOT distributes over OR via De Morgan's law, but keeping it grouped is cleaner."
+    ],
+    successMsg:"Perfect! Three AND clauses with nested logic. Real lending platforms, insurance underwriting, and hiring tools use exactly this structure.",
+    partialMsg:"Almost. Check: does your NOT apply to BOTH disqualifiers? 'NOT (default OR legal)' means NEITHER can be true."
+  },
+  {
+    id:"B4", type:"Boolean Logic", difficulty:"Hard", title:"Content Moderation Rules", icon:"🔣",
+    setup:"A social media platform's moderation engine:\n\nRemove a post if:\n- AI flagged with confidence > 0.85 AND category in [hate_speech, violence, csam]\n  OR\n- Reported by 5+ users AND author account < 30 days old\n  OR\n- Reported by 10+ users (regardless of anything else)\n\nBUT do NOT remove if:\n- Author is a verified journalist AND content is categorized as 'news'\n\nWrite the complete expression with the override logic.",
+    context:"Complex multi-branch rule with exception/override clause.",
+    expectedKeywords:[
+      ["confidence","0.85",">0.85","ai","model"],
+      ["category","hate","violence","csam"],
+      ["report","5","users",">=5"],
+      ["account","age","30","days","new"],
+      ["report","10",">=10"],
+      ["or","||"],["and","&&"],
+      ["not","!","except","unless","override"],
+      ["verified","journalist"],["news"]
+    ],
+    minMatches:7,
+    sampleAnswer:"triggers = (\n  (ai_confidence > 0.85 AND category IN [hate_speech, violence, csam])\n  OR (user_reports >= 5 AND account_age_days < 30)\n  OR (user_reports >= 10)\n)\n\nexception = (author_verified_journalist AND category == \"news\")\n\nremove_post = triggers AND NOT exception",
+    hints:[
+      "3 ways a post CAN be removed (OR branches), 1 way it's protected. Think: remove = (trigger_1 OR trigger_2 OR trigger_3) AND NOT (exception).",
+      "Structure triggers first, then add exception. The exception overrides - even if a trigger fires, the exception can save the post.",
+      "Similar: 'Evacuate if (fire OR gas_leak OR earthquake > 5.0) AND NOT (scheduled_drill AND notified)' - multiple triggers, one exception.",
+      "💡 Prompt Reveal:\n\n\"Convert moderation rules to Boolean: 3 OR-connected removal triggers, 1 AND-connected exception. Final: remove = (t1 OR t2 OR t3) AND NOT (exception).\"\n\nSeparating triggers and exceptions is how production systems are built."
+    ],
+    successMsg:"Excellent! You correctly separated triggers from the exception and combined with AND NOT. This layered approach is how production moderation, firewall rules, and access policies work.",
+    partialMsg:"Check: the exception overrides ALL three triggers. Final form: (all triggers with OR) AND NOT (exception). NOT applies to the whole exception clause."
+  },
+  // ── TYPE C: PATTERN SPOTTING ──
+  {
+    id:"C1", type:"Pattern Spotting", difficulty:"Easy", title:"The Filter Pattern", icon:"🔍",
+    setup:"Look at these three problems:\n\n📌 Problem 1: A teacher has 40 exam scores and needs to find all students who scored above 80.\n\n📌 Problem 2: An HR manager has 500 resumes and needs to shortlist those with 3+ years of experience.\n\n📌 Problem 3: A warehouse manager has 1,000 items and needs to identify all below reorder level.\n\nWhat is the COMMON PATTERN? Describe it as a general, reusable solution.",
+    context:"All three are filter/select operations: scan a collection, apply a condition, output matching items.",
+    expectedKeywords:[
+      ["filter","select","find","identify","pick","extract","search"],
+      ["condition","criteria","rule","threshold","test"],
+      ["list","collection","set","items","data"],
+      ["match","qualify","meet","satisfy","pass"]
+    ],
+    minMatches:3,
+    sampleAnswer:"The common pattern is FILTERING:\n\nGiven a collection of items, apply a condition to each, return only items that match.\n\nGeneral form: output = [item for item in collection if condition(item)]\n\nAll three: (1) scan a list, (2) test each item against a threshold, (3) keep the matches.",
+    hints:[
+      "Ignore the domains (school, HR, warehouse). What ACTION is being performed on the data in each case?",
+      "All three: Start with a big set → Apply a rule → Get a smaller set. What's this operation called?",
+      "Think of a coffee filter: pour everything in, only what meets criteria passes through. Exactly what's happening in all three.",
+      "💡 Prompt Reveal:\n\n\"Three problems share a computational pattern: (1) Scores > 80, (2) Resumes with 3+ years, (3) Inventory below reorder. Name the pattern and write a template.\"\n\nAsking for 'computational pattern' forces abstraction from domain specifics."
+    ],
+    successMsg:"The FILTER pattern! One of the most fundamental operations in computing. Email search, database queries, even deciding which clothes to pack - all the same pattern.",
+    partialMsg:"Close. Try stating it more abstractly - don't reference specific domains. What GENERAL operation do all three share? Input → operation → output."
+  },
+  {
+    id:"C2", type:"Pattern Spotting", difficulty:"Medium-Easy", title:"Accumulate-and-Reset", icon:"🔍",
+    setup:"Look at these three problems:\n\n📌 Problem 1: A fitness app tracks daily steps. End of each week: show weekly total, reset counter.\n\n📌 Problem 2: A billing system adds transaction amounts monthly. On the 1st: generate invoice for total, start fresh.\n\n📌 Problem 3: A factory monitors defects per shift. Every 8 hours: report count to supervisor, reset.\n\nWhat is the COMMON PATTERN? Describe it as a general, reusable solution template.",
+    context:"Accumulate-and-reset: running aggregation over a time window, then flush and restart.",
+    expectedKeywords:[
+      ["accumulate","add","sum","total","aggregate","count","collect","running"],
+      ["reset","clear","restart","start fresh","zero","new"],
+      ["window","period","interval","cycle","time","boundary"],
+      ["report","output","flush","emit","trigger","generate"]
+    ],
+    minMatches:3,
+    sampleAnswer:"ACCUMULATE AND RESET:\n\n1. Initialize counter to zero\n2. For each event, add to accumulator\n3. When boundary reached (end of week/month/shift), OUTPUT the total\n4. Reset accumulator to zero\n5. Repeat\n\nGeneral: While running → accumulate(value) → if boundary → emit(total), reset()",
+    hints:[
+      "All three have two alternating phases. What happens DURING the period vs. AT THE END?",
+      "Three components: (1) Something growing over time, (2) A trigger point, (3) An action that includes starting over. What are these in each?",
+      "Think of an hourglass: sand accumulates, when full (boundary) you flip it (reset) and start again. What's the 'sand' in each problem?",
+      "💡 Prompt Reveal:\n\n\"Three scenarios share a pattern: steps (weekly), billing (monthly), defects (per shift). Each involves accumulating over a window, then reporting and resetting. Name the pattern and write a template with: accumulator, boundary, emit, reset.\"\n\nNaming the components makes the abstraction concrete."
+    ],
+    successMsg:"Accumulate-and-Reset! Everywhere in software: log rotation, analytics dashboards, batch processing. Even how your brain consolidates memories during sleep.",
+    partialMsg:"You've identified parts. Include ALL four components: accumulator, incoming data, boundary trigger, and reset. The cycle makes it distinct."
+  },
+  {
+    id:"C3", type:"Pattern Spotting", difficulty:"Medium", title:"Divide and Conquer", icon:"🔍",
+    setup:"Three problems from very different domains:\n\n📌 Problem 1: Find a bug in 10,000 lines of code. Senior dev says: comment out half, check if bug persists, repeat in the buggy half.\n\n📌 Problem 2: Identify which of 12 foods a patient is allergic to. Eliminate 6 foods, test the reactive group by splitting again.\n\n📌 Problem 3: Find a book in a sorted shelf of 500. Check the middle book first, then search the correct half.\n\nWhat is the COMMON PATTERN? Why is it powerful?",
+    context:"Binary search / divide and conquer - halving the problem space at each step.",
+    expectedKeywords:[
+      ["divide","split","half","halv","binary","partition"],
+      ["eliminate","narrow","reduce","smaller"],
+      ["repeat","recursive","again","iterate"],
+      ["log","logarithm","efficient","fast","fewer steps"]
+    ],
+    minMatches:3,
+    sampleAnswer:"DIVIDE AND CONQUER (binary elimination):\n\n1. Start with full problem space\n2. Split in half\n3. Determine which half has the answer\n4. Discard the other half\n5. Repeat until found\n\nPowerful because it's logarithmic: 10,000 items needs only ~14 steps (log2 of 10,000). Each step halves the problem.",
+    hints:[
+      "All three avoid checking one by one. How do they speed up? What happens to problem size at each step?",
+      "1,000 items, eliminate half each step: 1000→500→250→125→63→32→16→8→4→2→1. Only 10 steps instead of 1,000. What's this called?",
+      "Guess a number 1-100. Smartest first guess: 50 - eliminates half no matter what. All three problems use this strategy.",
+      "💡 Prompt Reveal:\n\n\"Three scenarios share a search strategy: debug by commenting half, allergy test by eliminating half, find book by checking middle. Identify the algorithm, explain O(log n) efficiency, write a template.\"\n\nO(log n) forces analysis of WHY it's efficient."
+    ],
+    successMsg:"Divide and Conquer! Binary search, merge sort, debugging by bisection, medical diagnosis - same pattern. The leap from O(n) to O(log n) is massive.",
+    partialMsg:"You've noticed the halving. But WHY is it powerful? How many steps to find one item in a million by halving? (Only 20!) That efficiency is the real insight."
+  },
+  {
+    id:"C4", type:"Pattern Spotting", difficulty:"Hard", title:"The State Machine", icon:"🔍",
+    setup:"Three problems:\n\n📌 Problem 1: A vending machine accepts coins. Depending on total inserted: waits for more, enables Dispense, or returns change. Behavior depends on current state.\n\n📌 Problem 2: A support ticket system. Ticket: New → Assigned → In Progress → Waiting → Resolved → Closed. Each status allows only certain actions.\n\n📌 Problem 3: A traffic light cycles Green → Yellow → Red → Green, but can enter Emergency Override from any position.\n\nWhat is the COMMON PATTERN? Define it formally.",
+    context:"Finite State Machine - defined states, transitions, and rules governing valid transitions.",
+    expectedKeywords:[
+      ["state","status","mode","phase","condition"],
+      ["transition","move","change","switch","go from"],
+      ["rules","valid","allowed","permitted","constraints"],
+      ["current state","depends on","determines","behavior based"],
+      ["finite","defined","limited","enumerated","known"],
+      ["event","trigger","input","action","causes"]
+    ],
+    minMatches:4,
+    sampleAnswer:"FINITE STATE MACHINE (FSM):\n\n1. Finite set of defined STATES\n2. Set of TRANSITIONS between states\n3. RULES for which transitions are valid from each state\n4. EVENTS/INPUTS that trigger transitions\n5. Behavior determined by CURRENT STATE\n\nFormal: FSM = (States, Inputs, Transitions, Initial State, Final States)\n\nPowerful because: predictable, testable, prevents invalid transitions, handles all cases.",
+    hints:[
+      "All three: behavior RIGHT NOW depends on WHERE they are in a process. Same input does different things depending on current state. What system type behaves this way?",
+      "Key elements: (1) Limited set of conditions, (2) Rules for moving between them, (3) Same input → different output depending on current condition. This has a formal CS name.",
+      "Think of a board game. Each piece has a position (state). Dice roll (input) causes movement (transition). Rules say which moves are legal from each position. Same model.",
+      "💡 Prompt Reveal:\n\n\"Three systems (vending machine, ticket tracker, traffic light) share a model: behavior depends on state, inputs cause transitions, only certain transitions valid. Identify as Finite State Machine. Define: States, Inputs, Transition Function, Initial State, Accepting States.\"\n\nFSMs are foundational in UI, protocols, games, and compilers."
+    ],
+    successMsg:"The Finite State Machine! From TCP/IP to phone lock screens to game AI, FSMs model any system with well-defined behaviors. Enumerating all states means you can test every scenario.",
+    partialMsg:"You've noticed behavior depends on state - core insight. Now formalize: name the components every such system has (States, Transitions, Rules, Inputs, Initial State). That makes it a formal pattern."
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+let state = {
+  phase: "welcome",       // welcome|selectType|challenge|hint|allDone
+  challengeQueue: [],
+  currentIdx: -1,
+  hintsUsedThis: 0,
+  hintsHistory: [],
+  scores: [],
+  panelMode: null,       // null|"context"|"reference"
+  currentChallenge: null
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// DOM HELPERS
+// ═══════════════════════════════════════════════════════════════════
+const $msg = document.getElementById("messages");
+const $input = document.getElementById("userInput");
+const $send = document.getElementById("btnSend");
+const $progress = document.getElementById("progressFill");
+const $progressTxt = document.getElementById("progressText");
+const $panel = document.getElementById("rightPanel");
+const $panelContent = document.getElementById("rightPanelContent");
+
+function scrollBottom() {
+  setTimeout(() => $msg.scrollTop = $msg.scrollHeight, 50);
+}
+
+function updateProgress() {
+  const pct = (state.scores.length / 12) * 100;
+  $progress.style.width = pct + "%";
+  $progressTxt.textContent = state.scores.length + "/12";
+}
+
+function setInputEnabled(enabled, placeholder) {
+  $input.disabled = !enabled;
+  $send.disabled = !enabled;
+  $input.placeholder = placeholder || (enabled ? "Type your answer..." : "Select an option above...");
+  if (enabled) $input.focus();
+}
+
+function addBotMsg(text, style, buttons) {
+  const row = document.createElement("div");
+  row.className = "msg-row bot";
+  const bub = document.createElement("div");
+  bub.className = "bubble bot" + (style ? " " + style : "");
+  bub.textContent = text;
+  row.appendChild(bub);
+  if (buttons && buttons.length) {
+    const grp = document.createElement("div");
+    grp.className = "btn-group";
+    buttons.forEach(label => {
+      const btn = document.createElement("button");
+      btn.className = "btn-pill";
+      btn.textContent = label;
+      btn.onclick = () => handleButton(label);
+      grp.appendChild(btn);
+    });
+    row.appendChild(grp);
+  }
+  $msg.appendChild(row);
+  scrollBottom();
+}
+
+function addUserMsg(text) {
+  const row = document.createElement("div");
+  row.className = "msg-row user";
+  const bub = document.createElement("div");
+  bub.className = "bubble user";
+  bub.textContent = text;
+  row.appendChild(bub);
+  $msg.appendChild(row);
+  scrollBottom();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EVALUATOR
+// ═══════════════════════════════════════════════════════════════════
+function evaluate(text, ch) {
+  const lower = text.toLowerCase();
+  let matched = 0;
+  ch.expectedKeywords.forEach(group => {
+    if (group.some(kw => lower.includes(kw.toLowerCase()))) matched++;
+  });
+  if (matched >= ch.minMatches) return "correct";
+  if (matched / ch.expectedKeywords.length >= 0.3) return "partial";
+  return "incorrect";
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ADAPTIVE
+// ═══════════════════════════════════════════════════════════════════
+function getAdaptiveMsg() {
+  const h = state.hintsHistory;
+  if (h.length < 2) return null;
+  const recent = h.slice(-2);
+  const avg = recent.reduce((a, b) => a + b, 0) / recent.length;
+  if (avg <= 1) return { style: "adaptive boost", text: "🔥 You're on a roll! Stepping up the challenge." };
+  if (avg >= 3) return { style: "adaptive support", text: "💪 These are getting tougher. Take your time - no rush." };
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PANEL
+// ═══════════════════════════════════════════════════════════════════
+function renderContextPanel(ch) {
+  if (!ch) { $panelContent.innerHTML = ""; return; }
+  let html = `<div class="panel-title">${ch.icon} Challenge Context</div>
+    <div class="panel-subtitle">${ch.type} | ${ch.difficulty}</div>
+    <div class="card"><div class="card-label">Objective</div><div class="card-text">${ch.context}</div></div>
+    <div class="card"><div class="card-label">Keywords Evaluated</div><div style="margin-top:4px">`;
+  ch.expectedKeywords.flat().slice(0, 14).forEach(kw => { html += `<span class="tag">${kw}</span>`; });
+  html += `</div></div>
+    <div class="card"><div class="card-label">Hints Available</div><div class="hint-dots">`;
+  for (let i = 1; i <= 4; i++) {
+    html += `<div class="hint-dot ${i <= state.hintsUsedThis ? 'used' : 'unused'}">${i}</div>`;
+  }
+  html += `</div></div>`;
+  if (state.scores.length > 0) {
+    html += `<div class="card"><div class="card-label">Results So Far</div>`;
+    state.scores.forEach(s => {
+      html += `<div class="score-row"><span>${s.id}</span><span style="color:${s.result==='correct'?'var(--success)':'var(--warning)'}">${s.result==='correct'?'✅':'💡'} ${s.hintsUsed} hints</span></div>`;
+    });
+    html += `</div>`;
+  }
+  $panelContent.innerHTML = html;
+}
+
+function renderReferencePanel() {
+  let html = `<div class="panel-title">📋 Demo Reference</div>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Follow this flow. Click buttons or type the sample answers below.</p>`;
+  CHALLENGES.forEach(ch => {
+    const sample = ch.sampleAnswer.length > 220 ? ch.sampleAnswer.substring(0, 220) + "..." : ch.sampleAnswer;
+    html += `<div class="ref-card">
+      <div class="ref-card-title">${ch.icon} ${ch.id}: ${ch.title}</div>
+      <div class="ref-card-meta">${ch.difficulty} | ${ch.type}</div>
+      <div style="font-size:11px;margin-top:6px;font-weight:600">Sample answer:</div>
+      <div class="ref-card-sample">${sample}</div>
+    </div>`;
+  });
+  $panelContent.innerHTML = html;
+}
+
+function toggleReference() {
+  if (state.panelMode === "reference") {
+    state.panelMode = null;
+    $panel.classList.remove("open");
+    document.getElementById("btnRef").textContent = "📋 Demo Reference";
+  } else {
+    state.panelMode = "reference";
+    $panel.classList.add("open");
+    renderReferencePanel();
+    document.getElementById("btnRef").textContent = "Hide Reference";
+  }
+}
+
+function togglePanel() {
+  if (state.panelMode === "context") {
+    state.panelMode = null;
+    $panel.classList.remove("open");
+  } else {
+    state.panelMode = "context";
+    $panel.classList.add("open");
+    renderContextPanel(state.currentChallenge);
+  }
+}
+
+function showContext(ch) {
+  state.currentChallenge = ch;
+  if (state.panelMode === "context") renderContextPanel(ch);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CHALLENGE FLOW
+// ═══════════════════════════════════════════════════════════════════
+function presentChallenge() {
+  const ch = state.challengeQueue[state.currentIdx];
+  state.hintsUsedThis = 0;
+  showContext(ch);
+
+  // Adaptive message
+  const am = getAdaptiveMsg();
+  if (am) addBotMsg(am.text, am.style);
+
+  addBotMsg(`── ${ch.icon} ${ch.type} | Challenge ${ch.id} | ${ch.difficulty} ──\n\n${ch.title}`, "header");
+  setTimeout(() => {
+    addBotMsg(ch.setup);
+    state.phase = "challenge";
+    setInputEnabled(true);
+  }, 300);
+}
+
+function advanceToNext() {
+  state.currentIdx++;
+  if (state.currentIdx >= state.challengeQueue.length) {
+    state.phase = "allDone";
+    showContext(null);
+    const correct = state.scores.filter(s => s.result === "correct").length;
+    const totalHints = state.scores.reduce((a, s) => a + s.hintsUsed, 0);
+    let verdict = correct >= 10
+      ? "Outstanding! You've mastered these foundational patterns."
+      : correct >= 7
+        ? "Strong performance! Review challenges where you used 3+ hints."
+        : "Good effort! Revisit the hint explanations for key concepts.";
+    addBotMsg(`🏁 All challenges complete!\n\nScore: ${correct}/${state.scores.length} first-attempt successes\nTotal hints used: ${totalHints}\n\n${verdict}`, "summary");
+    setTimeout(() => {
+      addBotMsg("Want to go again or try a different type?", null, ["🧩 Decomposition", "🔣 Boolean Logic", "🔍 Pattern Spotting", "▶️ All (sequential)"]);
+      state.phase = "selectType";
+      setInputEnabled(false);
+    }, 600);
+    return;
+  }
+  presentChallenge();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// INPUT HANDLERS
+// ═══════════════════════════════════════════════════════════════════
+function handleButton(label) {
+  addUserMsg(label);
+
+  if (state.phase === "selectType") {
+    let queue;
+    if (label.includes("Decomposition")) queue = CHALLENGES.filter(c => c.type === "Decomposition");
+    else if (label.includes("Boolean")) queue = CHALLENGES.filter(c => c.type === "Boolean Logic");
+    else if (label.includes("Pattern")) queue = CHALLENGES.filter(c => c.type === "Pattern Spotting");
+    else queue = [...CHALLENGES];
+    state.challengeQueue = queue;
+    state.currentIdx = 0;
+    state.scores = [];
+    state.hintsHistory = [];
+    updateProgress();
+    presentChallenge();
+    return;
+  }
+
+  if (label === "💡 Get a Hint") {
+    const ch = state.challengeQueue[state.currentIdx];
+    const idx = state.hintsUsedThis;
+    if (idx < 4) {
+      addBotMsg(`Hint ${idx + 1}/4:\n\n${ch.hints[idx]}`, "hint");
+      state.hintsUsedThis = idx + 1;
+      showContext(ch);
+
+      if (idx + 1 === 4) {
+        setTimeout(() => {
+          addBotMsg(`Here's the model answer:\n\n${ch.sampleAnswer}`, "answer");
+          setTimeout(() => {
+            state.scores.push({ id: ch.id, result: "hinted", hintsUsed: 4 });
+            state.hintsHistory.push(4);
+            updateProgress();
+            addBotMsg("Study this, then move on when ready.", null, ["▶️ Next Challenge"]);
+            state.phase = "hint";
+            setInputEnabled(false);
+          }, 400);
+        }, 300);
+      }
+    }
+    return;
+  }
+
+  if (label === "▶️ Next Challenge") {
+    advanceToNext();
+    return;
+  }
+
+  if (label === "📋 Show Answer") {
+    const ch = state.challengeQueue[state.currentIdx];
+    addBotMsg(`Model answer:\n\n${ch.sampleAnswer}`, "answer");
+    return;
+  }
+}
+
+function handleSubmit() {
+  const text = $input.value.trim();
+  if (!text || state.phase !== "challenge") return;
+  $input.value = "";
+  addUserMsg(text);
+
+  const ch = state.challengeQueue[state.currentIdx];
+  const result = evaluate(text, ch);
+
+  setTimeout(() => {
+    if (result === "correct") {
+      addBotMsg("✅ " + ch.successMsg, "success");
+      state.scores.push({ id: ch.id, result: "correct", hintsUsed: state.hintsUsedThis });
+      state.hintsHistory.push(state.hintsUsedThis);
+      updateProgress();
+      setTimeout(() => {
+        addBotMsg("Nice work! Moving on.", null, ["▶️ Next Challenge", "📋 Show Answer"]);
+        state.phase = "hint";
+        setInputEnabled(false);
+      }, 300);
+    } else if (result === "partial") {
+      addBotMsg("🔶 " + ch.partialMsg, "partial");
+      setTimeout(() => {
+        addBotMsg("Try expanding your answer, or grab a hint.", null, ["💡 Get a Hint"]);
+      }, 200);
+    } else {
+      addBotMsg("Not quite there yet. Let's work through it.", "incorrect");
+      setTimeout(() => {
+        addBotMsg("Try again or get a hint.", null, ["💡 Get a Hint"]);
+      }, 200);
+    }
+  }, 400);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+(function init() {
+  addBotMsg("Welcome to the Logic & Decomposition Practice Lab! 🧠");
+  setTimeout(() => {
+    addBotMsg("You'll work through 12 challenges across three skill types:\n\n🧩 Decomposition (4 challenges) - Break messy problems into sub-tasks\n🔣 Boolean Logic (4 challenges) - Write logical expressions from rules\n🔍 Pattern Spotting (4 challenges) - Find the hidden pattern across problems\n\nDifficulty increases progressively within each type. I'll adapt based on how you're doing.");
+    setTimeout(() => {
+      addBotMsg("Each challenge has 4 progressive hints if you get stuck. Hint 4 reveals how an AI would approach it.\n\nReady? Pick a challenge type to start.", null,
+        ["🧩 Decomposition", "🔣 Boolean Logic", "🔍 Pattern Spotting", "▶️ All (sequential)"]);
+      state.phase = "selectType";
+    }, 300);
+  }, 200);
+})();
+</script>
+</body>
+</html>
